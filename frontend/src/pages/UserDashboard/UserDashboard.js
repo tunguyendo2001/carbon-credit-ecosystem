@@ -47,13 +47,13 @@ const SelectRegion = ({ setBounds }) => {
 };
 
 
-const generatorAddress="0x4aEc1F811719095af1f1a1c3636BcDfDA818CfE9";
-const consumerAddress="0xfE88D3c41682AC210903051c14FA6a5a7c7D14BD";
+const generatorAddress="0x59Bee23311a82E1984f188bf6Ba886Cd723daf32";
+const consumerAddress="0x8FC62510F4D3fb7259FE8AC091685222c1A6a211";
 
-const mintTokensContractAddress="0x8Ea7984E383A417096541A79aCB8006118994669";
-const nftContractAddress="0xde167FDbb75140eFE522e7032c933101E1985b98";
-const multiValidatorContractAddress="0x013b4fb4d9829fA2F89d850aAe375282Ee82B280";
-const ammContractAddress="0x7F114169bB2A15aA8d7aBA099B0AC7155471d627";
+const mintTokensContractAddress="0xB8e168E45767a6c343bAc3BC69E3322C41AB5492";
+const nftContractAddress="0x3982A6bE54499a69ECd02A9Ace26556E8A5183dF";
+const multiValidatorContractAddress="0x015bDDb1B132F58e8e94348d51a623a27363573f";
+const ammContractAddress="0x719EfaFeFBF4A036188E54Ef164CFAA34d1B7924";
 
 const GeneratorDashboard=(props)=>{
     const [web3,setWeb3]=useState(null);
