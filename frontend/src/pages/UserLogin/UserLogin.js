@@ -20,7 +20,7 @@ const UserLogin = (props) => {
         const { username, password } = formData;    
     
         try {
-            const response = await fetch("http://localhost:8000/api/login-generator", {
+            const response = await fetch("https://carbon-credit-ecosystem.onrender.com/api/login-generator", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -47,7 +47,7 @@ const UserLogin = (props) => {
         const { username, password } = formData;    
     
         try {
-            const response = await fetch("http://localhost:8000/api/login-consumer", {
+            const response = await fetch("https://carbon-credit-ecosystem.onrender.com/api/login-consumer", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -75,7 +75,7 @@ const UserLogin = (props) => {
         const { username, password } = formData;    
     
         try {
-            const response = await fetch("http://localhost:8000/api/login-validator", {
+            const response = await fetch("https://carbon-credit-ecosystem.onrender.com/api/login-validator", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
