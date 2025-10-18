@@ -5,7 +5,7 @@ const registerGenerator = async (formData) => {
     const { firstName, lastName, email, username, password } = formData;
 
     try {
-        const response = await fetch("https://carbon-credit-ecosystem-qofwl4mch-amol-netkes-projects.vercel.app/api/register-generator", {
+        const response = await fetch("https://carbon-credit-ecosystem.onrender.com/api/register-generator", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -38,7 +38,7 @@ const registerConsumer = async (formData) => {
     const { firstName, lastName, email, username, password } = formData;
 
     try {
-        const response = await fetch("https://carbon-credit-ecosystem-qofwl4mch-amol-netkes-projects.vercel.app/api/register-consumer", {
+        const response = await fetch("https://carbon-credit-ecosystem.onrender.com/api/register-consumer", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -71,7 +71,7 @@ const registerValidator = async (formData) => {
     const { role, firstName, lastName, email, username, password } = formData;
 
     try {
-        const response = await fetch("https://carbon-credit-ecosystem-qofwl4mch-amol-netkes-projects.vercel.app/api/register-validator", {
+        const response = await fetch("https://carbon-credit-ecosystem.onrender.com/api/register-validator", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
