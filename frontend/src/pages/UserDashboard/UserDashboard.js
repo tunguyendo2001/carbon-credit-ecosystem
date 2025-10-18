@@ -1,5 +1,3 @@
-import Footer from "../../components/Footer/Footer";
-import Header from "../../components/Header/Header";
 import "./UserDashboard.css";
 import React, { useState, useEffect} from "react";
 import getWeb3 from "../../handlers/Web3Handler";
@@ -477,7 +475,7 @@ const ValidatorDashboard=(props)=>{
 
     //approve evidence
     const approveEvidence = async () => {
-       if(status==="verified" && credits!=""){
+       if(status==="verified" && credits!==""){
             try {
                 const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
                 const validatorAddress = accounts[0];
@@ -540,6 +538,9 @@ const ValidatorDashboard=(props)=>{
             socket.onclose = () => console.log("WebSocket Disconnected");
         };
         initializeWebSocket();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+
     }, []);
 
     const verifyNDVI=async()=>{
