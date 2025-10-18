@@ -539,9 +539,7 @@ const ValidatorDashboard=(props)=>{
         };
         initializeWebSocket();
 
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-
-    }, []);
+    }, [coords]);
 
     const verifyNDVI=async()=>{
         try {
