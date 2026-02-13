@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: cce-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+      - MONGO_INITDB_DATABASE=off-chain-db
+    volumes:
+      - mongo-data:/data/db
+
+  # # 2. Node.js Backend
+  # backend-node:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile.node
+  #   container_name: cce-backend-node
+  #   ports:
+  #     - "3000:8000"  # Map port 8000 của container ra 3000 của máy thật
+  #   environment:
+  #     # Chuỗi kết nối: mongodb://<user>:<pass>@<service_name>:<port>/<db_name>?authSource=admin
+  #     - MONGO_URI=mongodb://admin:admin@mongodb:27017/off-chain-db?authSource=admin
+  #     - PORT=8000
+  #   depends_on:
+  #     - mongodb
+  #   volumes:
+  #     - ./backend:/app
+  #     - /app/node_modules
+
+  # # 3. Python Backend
+  # backend-python:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile.python
+  #   container_name: cce-backend-python
+  #   ports:
+  #     - "5000:5000"
+  #   volumes:
+  #     - ./backend:/app
+
+  # # 4. Frontend
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #   container_name: cce-frontend
+  #   ports:
+  #     - "3001:3000"
+  #   environment:
+  #     - REACT_APP_BACKEND_URL=http://localhost:3000
+  #   depends_on:
+  #     - backend-node
+  #   stdin_open: true
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+
+volumes:
+  mongo-data:

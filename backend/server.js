@@ -27,8 +27,10 @@ server.post("/api/retire-cct",(req,res)=>{
 });
 
 //connect with database and start the server
+const dbUri = process.env.MONGO_URI || `mongodb://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_URL}/${process.env.DB_NAME}?authSource=admin`;
+
 mongoose.connect(
-    `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.peteh.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority&appName=Cluster0`
+    dbUri
     ,{
         useNewUrlParser: true,
         useUnifiedTopology: true,
