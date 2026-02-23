@@ -103,3 +103,21 @@ Dự án được phát hành dưới giấy phép MIT.
 ---
 
 *Dự án được phát triển dựa trên nghiên cứu "A Blockchain-based Carbon Credit Ecosystem" của Dr. Soheil Saraji & Dr. Mike Borowczak.*
+
+## tund23
+
+```bash
+# tab 1
+cd backend && source venv/bin/activate && python app.py
+# tab 2
+cd backend && npm start
+# tab 3
+ganache --port 8545 --chain.networkId 5777
+# tab 4
+cd frontend && npm run start-generator
+# tab 5 - build & deploy contract use truffle
+rm -r build
+truffle compile --all
+truffle migrate --reset --network development
+```
+

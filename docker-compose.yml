@@ -1,62 +1,95 @@
 version: '3.8'
 
 services:
+  # ==========================================
+  # TAB 3: GANACHE (Local Blockchain)
+  # ==========================================
+  ganache:
+    image: node:18-alpine # Dùng Node 18 để tránh lỗi µWS của Truffle
+    container_name: cce-ganache
+    working_dir: /app
+    # Cài đặt ganache và host ra 0.0.0.0 để các container khác kết nối được
+    command: sh -c "npm install -g ganache && ganache --host 0.0.0.0 --port 8545 --chain.networkId 5777"
+    ports:
+      - "8545:8545"
+
+  # MONGODB (Database)
   mongodb:
     image: mongo:latest
     container_name: cce-mongodb
-    ports:
-      - "27017:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=admin
       - MONGO_INITDB_DATABASE=off-chain-db
+    ports:
+      - "27017:27017"
+
+  # ==========================================
+  # TAB 1: PYTHON BACKEND
+  # ==========================================
+  python-backend:
+    image: python:3.9-slim
+    container_name: cce-python
+    working_dir: /app
     volumes:
-      - mongo-data:/data/db
+      - ./backend:/app
+    command: sh -c "pip install flask sentinelhub numpy && python app.py"
+    ports:
+      - "5000:5000"
 
-  # # 2. Node.js Backend
-  # backend-node:
-  #   build:
-  #     context: ./backend
-  #     dockerfile: Dockerfile.node
-  #   container_name: cce-backend-node
-  #   ports:
-  #     - "3000:8000"  # Map port 8000 của container ra 3000 của máy thật
-  #   environment:
-  #     # Chuỗi kết nối: mongodb://<user>:<pass>@<service_name>:<port>/<db_name>?authSource=admin
-  #     - MONGO_URI=mongodb://admin:admin@mongodb:27017/off-chain-db?authSource=admin
-  #     - PORT=8000
-  #   depends_on:
-  #     - mongodb
-  #   volumes:
-  #     - ./backend:/app
-  #     - /app/node_modules
+  # ==========================================
+  # TAB 2: NODE.JS BACKEND
+  # ==========================================
+  node-backend:
+    image: node:18-alpine
+    container_name: cce-node
+    working_dir: /app
+    environment:
+      - MONGO_URI=mongodb://admin:admin@mongodb:27017/off-chain-db?authSource=admin
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - mongodb
+      - ganache
+    command: sh -c "npm install && npm start"
+    ports:
+      - "3000:3000"
 
-  # # 3. Python Backend
-  # backend-python:
-  #   build:
-  #     context: ./backend
-  #     dockerfile: Dockerfile.python
-  #   container_name: cce-backend-python
-  #   ports:
-  #     - "5000:5000"
-  #   volumes:
-  #     - ./backend:/app
+  # ==========================================
+  # TAB 4: FRONTEND (GENERATOR)
+  # ==========================================
+  frontend:
+    image: node:18-alpine
+    container_name: cce-frontend
+    working_dir: /app
+    environment:
+      - REACT_APP_BACKEND_URL=http://localhost:3000
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - node-backend
+    command: sh -c "npm install && npm run start-generator"
+    ports:
+      - "3001:3000" # Tab này sẽ chạy ở http://localhost:3001
 
-  # # 4. Frontend
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #   container_name: cce-frontend
-  #   ports:
-  #     - "3001:3000"
-  #   environment:
-  #     - REACT_APP_BACKEND_URL=http://localhost:3000
-  #   depends_on:
-  #     - backend-node
-  #   stdin_open: true
-  #   volumes:
-  #     - ./frontend:/app
-  #     - /app/node_modules
-
-volumes:
-  mongo-data:
+  # ==========================================
+  # TAB 5 & 6: TRUFFLE DEPLOY & DEMO RUNNER
+  # ==========================================
+  demo-runner:
+    image: node:18-alpine
+    container_name: cce-demo-runner
+    working_dir: /app
+    profiles: ["demo"] # Đặt profile để nó KHÔNG tự chạy khi gõ docker-compose up
+    environment:
+      - BLOCKCHAIN_HOST=ganache
+    volumes:
+      - ./:/app
+    depends_on:
+      - ganache
+    # Gộp Tab 5 và Tab 6 vào chung 1 kịch bản chạy tuần tự
+    command: >
+      sh -c "npm install -g truffle@5.11.5 && 
+             rm -rf build && 
+             truffle compile --all && 
+             truffle migrate --reset --network development && 
+             truffle exec scripts/demo_data_flow.js --network development"

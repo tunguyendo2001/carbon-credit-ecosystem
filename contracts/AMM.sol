@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 interface IMintContract {
+    function transfer(address to, uint256 amount) external returns (bool);
     function transferFrom(address from, address to, uint256 amount) external;
     function burnFrom(address from, uint256 amount) external;
 }
@@ -72,7 +73,7 @@ contract AMM{
         //require(listing.amount>=scaledBuyAmount,"Seller does not have enough CCT");
         
         //transfer cct
-        mintContract.transferFrom(address(this),msg.sender,scaledBuyAmount);
+        mintContract.transfer(msg.sender,scaledBuyAmount);
         listing.amount-=scaledBuyAmount;
 
         //send eth
