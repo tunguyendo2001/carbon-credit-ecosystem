@@ -5,9 +5,12 @@ import numpy as np
 from io import BytesIO
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from dotenv import load_dotenv
+import os
 
 app = Flask(__name__)
 CORS(app)
+load_dotenv()
 
 # @app.route('/api/calculate-ndvi',methods=['POST'])
 # def calculate_ndvi():
@@ -31,16 +34,20 @@ CORS(app)
 
 #     return jsonify({"ndvi": round(mean_ndvi, 4)})
 
-SENTINEL_CLIENT_ID = "a5613670-0580-4003-96a1-cc91d21cd4e0"
-SENTINEL_CLIENT_SECRET = "toaOch70SSdvRfhFAgdjQL2UsG8IuFuG"
-SENTINEL_BASE_URL = "https://services.sentinel-hub.com/oauth/token"
+SENTINEL_CLIENT_ID = os.getenv('SENTINAL_HUB_CLIENT_ID')
+SENTINEL_CLIENT_SECRET = os.getenv('SENTINAL_HUB_CLIENT_SECRET')
+SENTINEL_BASE_URL = "https://services.sentinel-hub.com/auth/realms/main/protocol/openid-connect/token"
 
 def get_sentinel_access_token():
-    response = requests.post(SENTINEL_BASE_URL, data={
-        'client_id': SENTINEL_CLIENT_ID,
-        'client_secret': SENTINEL_CLIENT_SECRET,
-        'grant_type': 'client_credentials'
-    })
+    response = requests.post(
+        SENTINEL_BASE_URL, 
+        data={
+            'client_id': SENTINEL_CLIENT_ID,
+            'client_secret': SENTINEL_CLIENT_SECRET,
+            'grant_type': 'client_credentials'
+        },
+        headers={"Content-Type": "application/x-www-form-urlencoded"}
+    )
     response.raise_for_status()
     return response.json()['access_token']
 

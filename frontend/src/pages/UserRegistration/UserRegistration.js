@@ -5,7 +5,7 @@ const registerGenerator = async (formData) => {
     const { firstName, lastName, email, username, password } = formData;
 
     try {
-        const response = await fetch("https://carbon-credit-ecosystem.onrender.com/api/register-generator", {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/register-generator`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -38,7 +38,7 @@ const registerConsumer = async (formData) => {
     const { firstName, lastName, email, username, password } = formData;
 
     try {
-        const response = await fetch("https://carbon-credit-ecosystem.onrender.com/api/register-consumer", {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/register-consumer`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -71,7 +71,7 @@ const registerValidator = async (formData) => {
     const { role, firstName, lastName, email, username, password } = formData;
 
     try {
-        const response = await fetch("https://carbon-credit-ecosystem.onrender.com/api/register-validator", {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/register-validator`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -220,6 +220,7 @@ const ConsumerRegistration = (props,{setIsLoggedIn,userType}) => {
         <React.Fragment>
             <form className="registration-form" onSubmit={handleSubmit}>
                 <h1>{props.userType} REGISTRATION</h1>
+
                 <div className="name-ip">
                     <input
                         className="form-ip"
@@ -276,6 +277,7 @@ const ValidatorRegistration = (props,{setIsLoggedIn,userType}) => {
         email: "",
         username: "",
         password: "",
+        role: "gps-validator",
     });
 
     const handleChange = (e) => {
@@ -289,8 +291,7 @@ const ValidatorRegistration = (props,{setIsLoggedIn,userType}) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        let isRegistered = false;
-        isRegistered = await registerValidator(formData);
+        let isRegistered = await registerValidator(formData);
     
         if (isRegistered) {
             setIsLoggedIn(true);
@@ -307,6 +308,18 @@ const ValidatorRegistration = (props,{setIsLoggedIn,userType}) => {
         <React.Fragment>
             <form className="registration-form" onSubmit={handleSubmit}>
                 <h1>{props.userType} REGISTRATION</h1>
+
+                <select 
+                    className="form-ip" 
+                    name="role" 
+                    value={formData.role} 
+                    onChange={handleChange}
+                    required
+                >
+                    <option value="gps-validator">GPS Validator</option>
+                    <option value="report-validator">Report Validator</option>
+                </select>
+                
                 <div className="name-ip">
                     <input
                         className="form-ip"
