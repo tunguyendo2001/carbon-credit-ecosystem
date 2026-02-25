@@ -60,4 +60,17 @@ contract MintTokens {
         emit Transfer(msg.sender, address(0), _amount);
         return true;
     }
+
+    // Validator (hoặc hợp đồng được ủy quyền) gọi để tiêu hủy token của Consumer
+    function burnFrom(address _from, uint256 _amount) external returns (bool) {
+        require(balanceOf[_from] >= _amount, "Insufficient CCT in wallet");
+        require(allowance[_from][msg.sender] >= _amount, "Allowance exceeded");
+
+        allowance[_from][msg.sender] -= _amount;
+        balanceOf[_from] -= _amount;
+        totalSupply -= _amount;
+        
+        emit Transfer(_from, address(0), _amount);
+        return true;
+    }
 }

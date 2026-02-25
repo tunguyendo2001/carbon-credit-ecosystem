@@ -1,7 +1,7 @@
 import "./UserDashboard.css";
 import React, { useState, useEffect} from "react";
 import getWeb3 from "../../handlers/Web3Handler";
-import MultiValidatorABI from "../../abis/MutliValidator.json";
+import MultiValidatorABI from "../../abis/MultiValidator.json";
 import MintTokensABI from "../../abis/MintTokens.json";
 import ammABI from "../../abis/AMM.json";
 import nftABI from "../../abis/MintNFT.json";
@@ -45,13 +45,13 @@ const SelectRegion = ({ setBounds }) => {
 };
 
 
-const generatorAddress="0x59Bee23311a82E1984f188bf6Ba886Cd723daf32";
-const consumerAddress="0x8FC62510F4D3fb7259FE8AC091685222c1A6a211";
+// const generatorAddress="0x59Bee23311a82E1984f188bf6Ba886Cd723daf32";
+// const consumerAddress="0x8FC62510F4D3fb7259FE8AC091685222c1A6a211";
 
-const mintTokensContractAddress="0xB8e168E45767a6c343bAc3BC69E3322C41AB5492";
-const nftContractAddress="0x3982A6bE54499a69ECd02A9Ace26556E8A5183dF";
-const multiValidatorContractAddress="0x015bDDb1B132F58e8e94348d51a623a27363573f";
-const ammContractAddress="0x719EfaFeFBF4A036188E54Ef164CFAA34d1B7924";
+// const mintTokensContractAddress="0xB8e168E45767a6c343bAc3BC69E3322C41AB5492";
+// const nftContractAddress="0x3982A6bE54499a69ECd02A9Ace26556E8A5183dF";
+// const multiValidatorContractAddress="0x015bDDb1B132F58e8e94348d51a623a27363573f";
+// const ammContractAddress="0x719EfaFeFBF4A036188E54Ef164CFAA34d1B7924";
 
 const GeneratorDashboard=(props)=>{
     const [web3,setWeb3]=useState(null);
@@ -138,12 +138,15 @@ const GeneratorDashboard=(props)=>{
     
     //fetch CCT Balance
     const fetchTokensReceived = async () => {
-        if (!web3 || !generatorAddress) return;
-
+        if (!web3 || !genAddress) return;
         try {
-            const mintContract = new web3.eth.Contract(MintTokensABI.abi, mintTokensContractAddress);
-            const balance = await mintContract.methods.balanceOf(generatorAddress).call();
-            const cctBalance=await web3.utils.fromWei(balance,"ether");
+            const networkId = await web3.eth.net.getId();
+            const deployedNetwork = MintTokensABI.networks[networkId];
+            const mintContract = new web3.eth.Contract(MintTokensABI.abi, deployedNetwork.address);
+            
+            // Dùng genAddress (ví hiện tại) thay vì generatorAddress hardcode
+            const balance = await mintContract.methods.balanceOf(genAddress).call();
+            const cctBalance = await web3.utils.fromWei(balance, "ether");
             console.log("Carbon Tokens:", cctBalance);
             setTokensReceived(cctBalance); 
         } catch (error) {
@@ -152,10 +155,41 @@ const GeneratorDashboard=(props)=>{
     };
 
     //listing on AMM
-    const listOnAMM=async()=>{
-        const listContract=new web3.eth.Contract(ammABI.abi,ammContractAddress);
-        await listContract.methods.listTokens(listAmount,pricePerCCT).send({from:generatorAddress});
-        console.log(`Listed ${listAmount} CCT at ${pricePerCCT} DAI each`);
+    const listOnAMM = async () => {
+        if (!web3 || !genAddress) return;
+        try {
+            const networkId = await web3.eth.net.getId();
+            
+            // Lấy địa chỉ của cả 2 Contract
+            const ammNetwork = ammABI.networks[networkId];
+            const mintNetwork = MintTokensABI.networks[networkId];
+            
+            const ammContract = new web3.eth.Contract(ammABI.abi, ammNetwork.address);
+            const mintContract = new web3.eth.Contract(MintTokensABI.abi, mintNetwork.address);
+            
+            // Hợp đồng AMM.sol tự nhân 10**18 ở bên trong, nên ta phải tính số lượng Wei để Approve
+            const amountInWei = web3.utils.toWei(listAmount.toString(), "ether");
+
+            // BƯỚC 1: CẤP QUYỀN (APPROVE) CHO AMM
+            console.log("Đang cấp quyền cho AMM Contract...");
+            alert("Vui lòng xác nhận giao dịch Approve trên MetaMask (Bước 1/2)");
+            await mintContract.methods.approve(ammNetwork.address, amountInWei).send({from: genAddress});
+            
+            // BƯỚC 2: NIÊM YẾT LÊN SÀN (LIST)
+            console.log("Đang niêm yết lên sàn...");
+            alert("Vui lòng xác nhận giao dịch List Tokens trên MetaMask (Bước 2/2)");
+            await ammContract.methods.listTokens(listAmount, pricePerCCT).send({from: genAddress});
+            
+            console.log(`Listed ${listAmount} CCT at ${pricePerCCT} ETH each`);
+            alert("🎉 Niêm yết CCT lên sàn thành công!");
+            
+            // Reset input
+            setListAmount("");
+            setPricePerCCT("");
+        } catch (error) {
+            console.error("Lỗi khi niêm yết:", error);
+            alert("Giao dịch thất bại! Vui lòng kiểm tra lại console.");
+        }
     }
 
     //logout
@@ -265,54 +299,119 @@ const ConsumerDashboard=(props)=>{
         } 
     }
 
-    //fetch listings
-    const fetchFromAMM=async()=>{
+//fetch listings
+    const fetchFromAMM = async () => {
         if (!web3) return;
-
         try {
-            const contract=new web3.eth.Contract(ammABI.abi,ammContractAddress);
-            const listings=await contract.methods.fetchListings().call();
-
-            const formattedListings=listings.map((listing,index)=>({
+            const networkId = await web3.eth.net.getId();
+            const deployedNetwork = ammABI.networks[networkId];
+            const contract = new web3.eth.Contract(ammABI.abi, deployedNetwork.address);
+            
+            const listings = await contract.methods.fetchListings().call();
+            const formattedListings = listings.map((listing, index) => ({
                 index,
                 seller: listing.seller,
-                amount: web3.utils.fromWei(listing.amount,"ether"),
-                pricePerCCT: web3.utils.fromWei(listing.pricePerCCT,"ether"),
+                amount: web3.utils.fromWei(listing.amount, "ether"),
+                pricePerCCT: web3.utils.fromWei(listing.pricePerCCT, "ether"),
             }));
-
-            console.log("Fetched Listings : ",formattedListings);
-            
-            if (formattedListings.length > 0) {
-                setListings(formattedListings);
-            } else {
-                console.log("No listings found.");
-            }
+            setListings(formattedListings);
         } catch (error) {
             console.error("Error fetching listings:", error);
         }
     }
 
     //buy cct
-    const buyCCT=async()=>{
-        const ammContract=new web3.eth.Contract(ammABI.abi,ammContractAddress);
-        await ammContract.methods
-            .buyTokens(selectedListing.index,buyAmount)
-            .send({from: consumerAddress});
+    const buyCCT = async () => {
+        if (!web3 || !consumerAddress) return;
+        try {
+            const networkId = await web3.eth.net.getId();
+            const deployedNetwork = ammABI.networks[networkId];
+            const ammContract = new web3.eth.Contract(ammABI.abi, deployedNetwork.address);
+            
+            // Tính số ETH cần trả (Giá * Số lượng)
+            const ethRequired = (buyAmount * selectedListing.pricePerCCT).toString();
+            const weiToPay = web3.utils.toWei(ethRequired, "ether");
+
+            await ammContract.methods
+                .buyTokens(selectedListing.index, buyAmount)
+                .send({ from: consumerAddress, value: weiToPay }); // Nhớ gửi kèm 'value' để trả tiền
+            
+            alert("Mua CCT thành công!");
+        } catch (error) {
+            console.error("Lỗi khi mua CCT:", error);
+        }
     }   
 
     //display balance
-    const displayCCT=async()=>{
-        const mintTokensContract=new web3.eth.Contract(MintTokensABI.abi,mintTokensContractAddress);
-        const balance = await mintTokensContract.methods.balanceOf(consumerAddress).call();
-        const cctBalance=await web3.utils.fromWei(balance,"ether");
-        console.log("Carbon Tokens:", cctBalance);
-        setCCTReceived(cctBalance);
+    const displayCCT = async () => {
+        if (!web3 || !consumerAddress) return;
+        try {
+            const networkId = await web3.eth.net.getId();
+            const deployedNetwork = MintTokensABI.networks[networkId];
+            const mintTokensContract = new web3.eth.Contract(MintTokensABI.abi, deployedNetwork.address);
+            
+            const balance = await mintTokensContract.methods.balanceOf(consumerAddress).call();
+            const cctBalance = web3.utils.fromWei(balance, "ether");
+            setCCTReceived(cctBalance);
+        } catch (error) {
+            console.error("Error displaying balance:", error);
+        }
+    }
+
+    const viewCRC = async () => {
+        if (!web3 || !consumerAddress) return;
+        try {
+            const networkId = await web3.eth.net.getId();
+            const deployedNetwork = nftABI.networks[networkId];
+            const nftContract = new web3.eth.Contract(nftABI.abi, deployedNetwork.address);
+            
+            // 1. IN RA DANH SÁCH HÀM ĐỂ CHECK ABI
+            console.log("Danh sách hàm trong Contract:", Object.keys(nftContract.methods));
+
+            // 2. GỌI THỬ BIẾN PUBLIC XEM CÓ DATA KHÔNG
+            const currentTokenId = await nftContract.methods.latestTokenId(consumerAddress).call();
+            console.log("Token ID của Consumer là:", currentTokenId);
+
+            if (currentTokenId.toString() === "0") {
+                alert("Bạn chưa có chứng nhận nào! Validator chưa duyệt thành công.");
+                return;
+            }
+
+            // 3. NẾU TOKEN ID > 0 MỚI GỌI HÀM NÀY
+            const crcData = await nftContract.methods.getCRCByAddress(consumerAddress).call();
+            
+            setCRC({
+                owner: crcData[0],
+                burnAmount: web3.utils.fromWei(crcData[1], "ether"),
+                timestamp: crcData[2],
+            });
+        } catch (error) {
+            console.error("Lỗi sâu:", error);
+        }
     }
 
     //retire
-    const retireCredits=async()=>{
-        try{
-            const response=await fetch("http://localhost:8000/api/retire-cct",{
+    const retireCredits = async () => {
+        if (!web3 || !consumerAddress) return;
+        try {
+            const networkId = await web3.eth.net.getId();
+            
+            // Lấy địa chỉ Contract
+            const mintNetwork = MintTokensABI.networks[networkId];
+            const multiValidatorNetwork = MultiValidatorABI.networks[networkId];
+            
+            const mintContract = new web3.eth.Contract(MintTokensABI.abi, mintNetwork.address);
+            
+            // Tính số lượng Wei
+            const amountInWei = web3.utils.toWei(retireAmount.toString(), "ether");
+
+            // 1. NGƯỜI MUA KÝ CẤP QUYỀN CHO VALIDATOR ĐƯỢC PHÉP ĐỐT TOKEN CỦA MÌNH
+            console.log("Đang cấp quyền tiêu hủy cho Validator...");
+            alert("Vui lòng xác nhận giao dịch Approve trên MetaMask để cho phép hệ thống thu hồi tín chỉ.");
+            await mintContract.methods.approve(multiValidatorNetwork.address, amountInWei).send({from: consumerAddress});
+            
+            // 2. SAU KHI KÝ XONG MỚI GỬI REQUEST LÊN BACKEND (WEBSOCKET)
+            const response = await fetch("http://localhost:8000/api/retire-cct", {
                 method: "POST",
                 headers: {
                     "Accept": "application/json",
@@ -325,25 +424,14 @@ const ConsumerDashboard=(props)=>{
             });
 
             if(response.ok){
+                alert("✅ Đã gửi yêu cầu tiêu hủy! Vui lòng chuyển sang Tab Validator để duyệt.");
                 const data = await response.json();
                 console.log(data);
             }
-        }catch(error){
-            console.log(error);
+        } catch(error) {
+            console.error(error);
+            alert("Giao dịch thất bại hoặc bạn đã từ chối ký trên MetaMask!");
         }
-    }
-
-    //crc
-    const viewCRC=async()=>{
-        const nftContract=new web3.eth.Contract(nftABI.abi,nftContractAddress);
-        const crcData=await nftContract.methods.getCRC(consumerAddress).call();
-        
-        console.log(crcData);
-        setCRC({
-            owner: crcData[0],
-            burnAmount: web3.utils.fromWei(crcData[1], "ether"),
-            timestamp: crcData[2],
-        });
     }
 
     //logout
@@ -473,32 +561,58 @@ const ValidatorDashboard=(props)=>{
         } 
     }
 
-    //approve evidence
+    //approve evidence (Approve CCT cho Generator)
     const approveEvidence = async () => {
-       if(status==="verified" && credits!==""){
+        if (status === "verified" && credits !== "") {
             try {
-                const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-                const validatorAddress = accounts[0];
-                console.log(validatorAddress);
-        
-                const contract = new web3.eth.Contract(MultiValidatorABI.abi, multiValidatorContractAddress);
-                await contract.methods
-                    .voteToApprove(generatorAddress, credits)
-                    .send({ from: validatorAddress});
+                const networkId = await web3.eth.net.getId();
+                const deployedNetwork = MultiValidatorABI.networks[networkId];
+                const contract = new web3.eth.Contract(MultiValidatorABI.abi, deployedNetwork.address);
                 
-                    alert("CCT Approved");
-                    setAddressGen("");
-                    setNDVI("");
-                    setCoords("");
-                    setSequestrationAmount("");
-                    setStatus("not verified");
+                // Dùng addressGen (Địa chỉ do Generator gửi qua WebSocket)
+                await contract.methods
+                    .voteToApprove(addressGen, credits)
+                    .send({ from: validatorAddress });
+                
+                alert("CCT Approved Thành Công");
+                setAddressGen("");
+                setNDVI("");
+                setCoords("");
+                setSequestrationAmount("");
+                setStatus("not verified");
             } catch (error) {
                 console.error("Error approving evidence:", error);
             }
-        }else{
-            alert("Cannot Approve CCT")
+        } else {
+            alert("Không thể Approve CCT lúc này!");
         }
     };
+    
+    //approve NFT (Approve Retire cho Consumer)
+    const approveNFT = async () => {
+        try {
+            if (!amount || amount === "" || !receivedAddress) {
+                alert("Lỗi: Không có yêu cầu tiêu hủy nào từ Consumer!");
+                return;
+            }
+
+            const networkId = await web3.eth.net.getId();
+            const deployedNetwork = MultiValidatorABI.networks[networkId];
+            const burnContract = new web3.eth.Contract(MultiValidatorABI.abi, deployedNetwork.address);
+            
+            // const amountInWei = web3.utils.toWei(amount.toString(), 'ether');
+
+            await burnContract.methods
+                .burnTokens(receivedAddress, amount)
+                .send({ from: validatorAddress });
+                
+            alert("Phê duyệt tiêu hủy và cấp NFT thành công!");
+            setAmount("");
+            setReceivedAddress("");
+        } catch (error) {
+            console.error("Lỗi khi duyệt NFT:", error);
+        }
+    }
     
     const rejectEvidence=async()=>{
         alert("Request Rejected");
@@ -587,19 +701,6 @@ const ValidatorDashboard=(props)=>{
         }catch(error){
             console.log(error);
         }
-    }
-
-    const approveNFT=async()=>{
-        try{
-            const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-            const validatorAddress = accounts[0];
-            console.log(validatorAddress);
-
-            const burnContract=new web3.eth.Contract(MultiValidatorABI.abi,multiValidatorContractAddress);
-            await burnContract.methods.burnTokens(consumerAddress,amount).send({from:validatorAddress});
-        }catch(error){
-            console.log(error);
-        }        
     }
 
     return (

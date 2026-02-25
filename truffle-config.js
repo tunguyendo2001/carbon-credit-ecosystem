@@ -1,4 +1,7 @@
+const path = require("path");
+
 module.exports = {
+  contracts_build_directory: path.join(__dirname, "frontend/src/abis"),
   networks: {
     development: {
       host: process.env.BLOCKCHAIN_HOST || "127.0.0.1", // Localhost (default: none)

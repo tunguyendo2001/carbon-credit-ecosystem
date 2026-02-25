@@ -121,3 +121,75 @@ truffle compile --all
 truffle migrate --reset --network development
 ```
 
+## 🎬 Kịch bản Demo: Hệ sinh thái Tín chỉ Carbon (End-to-End)
+📌 Chuẩn bị trước khi Demo:
+Mở sẵn 4 tab trình duyệt cho 4 portal: Generator, Validator 1, Validator 2, và Consumer. Đảm bảo Ganache đang chạy và MetaMask đã được import sẵn các tài khoản.
+
+### Bước 1: Khởi tạo dự án và Yêu cầu cấp tín chỉ (Tại tab Generator)
+
+Chọn đúng tài khoản Generator trên MetaMask.
+
+Click "Connect Wallet" để liên kết ví.
+
+Trên bản đồ Leaflet, click chọn một vùng rừng (hệ thống sẽ vẽ một khung chữ nhật bao quanh).
+
+Click "Calculate NDVI" để gọi AI/Vệ tinh phân tích chỉ số mảng xanh.
+
+Click "Send NDVI" để gửi dữ liệu này lên hệ thống (WebSocket sẽ lập tức báo tin cho các Validators).
+
+### Bước 2: Kiểm định và Phê duyệt phát hành (Tại tab Validator 1 & Validator 2)
+
+Chuyển sang tài khoản Validator 1 trên MetaMask và tab Validator 1. Click "Connect Wallet".
+
+Click "Verify NDVI" để hệ thống tự tính toán lại nhằm đối chiếu, tránh việc Generator gian lận số liệu.
+
+Click "Estimate CO2 Sequestration" để quy đổi chỉ số NDVI thành lượng CO2 hấp thụ và số Tín chỉ (CCT) tương ứng.
+
+Click "Approve CCT" và ký giao dịch trên MetaMask để bỏ phiếu đồng thuận.
+
+Lặp lại y hệt 4 thao tác trên tại tab Validator 2. (Vì Smart Contract yêu cầu đa chữ ký, khi đủ 2 phiếu, Token CCT sẽ tự động được đúc và gửi cho Generator).
+
+### Bước 3: Nhận Token và Niêm yết lên sàn giao dịch (Tại tab Generator)
+
+Quay lại tab Generator, click "View CCT" để kiểm tra số dư Token ERC-20 vừa được đúc.
+
+Kéo xuống mục AMM, nhập số lượng CCT muốn bán và giá bán (ETH/CCT).
+
+Click "List on AMM". (Hệ thống sẽ yêu cầu ký MetaMask 2 lần: Lần 1 để cấp quyền cho sàn AMM, Lần 2 để thực sự niêm yết lên sàn).
+
+### Bước 4: Mua Tín chỉ Carbon (Tại tab Consumer)
+
+Chuyển sang tài khoản Consumer trên MetaMask và tab Consumer. Click "Connect Wallet".
+
+Click "Fetch from AMM" để tải danh sách các đơn hàng đang được bán trên sàn.
+
+Chọn đơn hàng của Generator, nhập số lượng muốn mua và click "Buy CCT".
+
+Ký giao dịch trên MetaMask để thanh toán bằng ETH và nhận CCT về ví.
+
+Click "View CCT" (phía dưới) để xác nhận số dư tín chỉ vừa mua thành công.
+
+### Bước 5: Bù đắp phát thải - Tiêu hủy tín chỉ (Tại tab Consumer)
+
+Kéo xuống mục Retire, nhập số lượng CCT muốn tiêu hủy để bù đắp lượng Carbon xả thải của doanh nghiệp.
+
+Click "Retire CCT".
+
+Ký giao dịch trên MetaMask để cấp quyền cho Validator thu hồi số token này. (Lúc này WebSocket sẽ báo tin cho Validators).
+
+### Bước 6: Xác nhận tiêu hủy và Cấp Chứng nhận (Tại tab Validator 1 & Validator 2)
+
+Quay lại tab Validator 1, lúc này màn hình đã hiện yêu cầu tiêu hủy của Consumer.
+
+Click "Approve CRC" và ký MetaMask để thực hiện đốt token (Burn).
+
+Lặp lại thao tác "Approve CRC" tại tab Validator 2 để hoàn tất sự đồng thuận. Sau bước này, một NFT Chứng nhận (ERC-721) sẽ được đúc cho Consumer.
+
+### Bước 7: Nhận NFT Chứng nhận Bù đắp Carbon (Tại tab Consumer)
+
+Quay lại tab Consumer lần cuối.
+
+Click nút "View CRC".
+
+Thông tin chi tiết của Carbon Removal Certificate (NFT) sẽ hiện ra, chứng minh doanh nghiệp đã tiêu hủy thành công số lượng tín chỉ được ghi nhận vĩnh viễn trên Blockchain! 🎉
+

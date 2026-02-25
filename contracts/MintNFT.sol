@@ -5,49 +5,46 @@ contract MintNFT {
     string public name = "Carbon Removal Certificate";
     string public symbol = "CRC";
     
-    // Quản lý ID duy nhất cho từng NFT được phát hành
-    uint256 public nextTokenId = 1; 
+    uint256 public nextTokenId = 1;
 
-    // Các mapping theo chuẩn ERC-721
     mapping(uint256 => address) private _owners;
     mapping(address => uint256) private _balances;
     mapping(uint256 => address) private _tokenApprovals;
     mapping(address => mapping(address => bool)) private _operatorApprovals;
 
-    // Cấu trúc lưu thông tin lượng carbon đã bù đắp của mỗi NFT
+    // THÊM: Biến này dùng để nhớ Token ID mới nhất của một địa chỉ ví
+    mapping(address => uint256) public latestTokenId;
+
     struct CRCInfo {
         uint256 burnAmount;
         uint256 timestamp;
     }
     mapping(uint256 => CRCInfo) public certificateDetails;
 
-    // Sự kiện của ERC-721
     event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
     event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
     event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
 
-    // --- CÁC HÀM CƠ BẢN CỦA DỰ ÁN ---
-
-    // Phát hành NFT khi Consumer thực hiện Burn Token
     function mintCRC(address _consumer, uint256 _amount) external {
         require(_consumer != address(0), "Mint to zero address");
         
         uint256 tokenId = nextTokenId;
-        nextTokenId += 1; // Tăng ID cho NFT tiếp theo
+        nextTokenId += 1;
 
         _balances[_consumer] += 1;
         _owners[tokenId] = _consumer;
 
-        // Lưu thông tin chứng nhận
         certificateDetails[tokenId] = CRCInfo({
             burnAmount: _amount,
             timestamp: block.timestamp
         });
 
+        // CẬP NHẬT: Lưu lại Token ID mới nhất của user
+        latestTokenId[_consumer] = tokenId;
+
         emit Transfer(address(0), _consumer, tokenId);
     }
 
-    // Lấy thông tin chứng nhận bằng TokenID
     function getCRCDetails(uint256 _tokenId) external view returns (address owner, uint256 amount, uint256 timestamp) {
         owner = _owners[_tokenId];
         require(owner != address(0), "Invalid Token ID");
@@ -55,7 +52,13 @@ contract MintNFT {
         return (owner, info.burnAmount, info.timestamp);
     }
 
-    // --- CÁC HÀM THEO CHUẨN ERC-721 ---
+    // THÊM HÀM MỚI: Dành cho Frontend gọi
+    function getCRCByAddress(address _owner) external view returns (address owner, uint256 amount, uint256 timestamp) {
+        uint256 tokenId = latestTokenId[_owner];
+        require(tokenId != 0, "No CRC found for this address");
+        CRCInfo memory info = certificateDetails[tokenId];
+        return (_owner, info.burnAmount, info.timestamp);
+    }
 
     function balanceOf(address owner) external view returns (uint256) {
         require(owner != address(0), "Query for zero address");
