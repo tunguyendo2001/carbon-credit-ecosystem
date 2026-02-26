@@ -65,24 +65,4 @@ services:
     network_mode: "host"
     depends_on:
       - node-backend
-
-  # TAB 5 & 6: DEMO RUNNER
-  demo-runner:
-    image: node:18-alpine
-    container_name: cce-demo-runner
-    network_mode: "host"
-    working_dir: /app
-    profiles: ["demo"]
-    environment:
-      - BLOCKCHAIN_HOST=localhost
-    volumes:
-      - ./:/app
-    depends_on:
-      - ganache
-    command: >
-      sh -c "npm install -g truffle@5.11.5 && 
-             rm -rf build && 
-             truffle compile --all && 
-             truffle migrate --reset --network development && 
-             truffle exec scripts/demo_data_flow.js --network development"
   
