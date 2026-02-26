@@ -200,18 +200,22 @@ const GeneratorDashboard=(props)=>{
     
     return (
     <React.Fragment>
-        <div>
-            <h1>GENERATOR DASHBOARD</h1>
+        <div className="dashboard-shell">
+            <div className="dashboard-header">
+                <p className="dashboard-kicker">Carbon Credit Ecosystem</p>
+                <h1>Generator Dashboard</h1>
+                <p className="dashboard-subtitle">Đo NDVI, gửi bằng chứng hấp thụ carbon và niêm yết CCT lên AMM.</p>
+            </div>
                 
             {/*wallet connection*/}
             <br/>
             <button className="connect-btn" onClick={handleConnectWallet}>Connect Wallet</button>
             <br/>
-            <p>Wallet Address : {genAddress}</p>
+            <p className="wallet-chip">Wallet Address: {genAddress || "Chưa kết nối"}</p>
         
             {/** */}
             <br/>
-            <p>Select a region on map : </p>
+            <h3 className="section-title">1) Chọn khu vực dự án</h3>
             
             <div className="map-container">
                 <MapContainer center={[20.5937, 78.9629]} zoom={5} style={{ height: "400px", width: "100%" }}>
@@ -230,7 +234,7 @@ const GeneratorDashboard=(props)=>{
 
             <br/>
             <button className="fun-btn" onClick={handleNDVICalcFromMap}>Calculate NDVI</button>
-            <p>NDVI : {ndvi}</p>
+            <p className="metric-chip">NDVI: <strong>{ndvi}</strong></p>
 
             {/**send for approval */}
             <br/>
@@ -240,7 +244,7 @@ const GeneratorDashboard=(props)=>{
             <br/><br/>
             <button  className="fun-btn" onClick={fetchTokensReceived}>View CCT</button>
             <br/>
-            CCT : {tokensReceived}
+            <p className="metric-chip">CCT khả dụng: <strong>{tokensReceived || "0"}</strong></p>
             
             {/**list on AMM */}
             <br/><br/>
@@ -442,18 +446,23 @@ const ConsumerDashboard=(props)=>{
 
     return (
         <React.Fragment>
-            <div>               
-                <h1>CONSUMER DASHBOARD</h1>
+            <div className="dashboard-shell">               
+                <div className="dashboard-header">
+                    <p className="dashboard-kicker">Carbon Credit Ecosystem</p>
+                    <h1>Consumer Dashboard</h1>
+                    <p className="dashboard-subtitle">Mua CCT từ AMM, retire tín chỉ và nhận chứng nhận CRC NFT.</p>
+                </div>
                 {/*wallet connection*/}
                 <br/>
                 <button className="connect-btn" onClick={handleConnectWallet}>Connect Wallet</button>
                 <br/>
-                <p>Wallet Address : {consumerAddress}</p>
+                <p className="wallet-chip">Wallet Address: {consumerAddress || "Chưa kết nối"}</p>
 
                 {/**fetch from amm */}
                 <br/>
                 <button className="fun-btn" onClick={fetchFromAMM}>Fetch from AMM</button>
                 <br/>
+                <h3 className="section-title">1) AMM Market Listings</h3>
                 <div id="cct-listings"> 
                     {listings.length>0?
                         (listings.map((listing,idx)=>
@@ -490,7 +499,7 @@ const ConsumerDashboard=(props)=>{
                 {/**balance display */}
                 <br/>
                 <button className="fun-btn" onClick={displayCCT} type="button">View CCT</button>
-                <p>CCT : {cctReceived}</p>
+                <p className="metric-chip">CCT trong ví: <strong>{cctReceived || "0"}</strong></p>
 
                 {/**retre credits */}
                 <br/>
@@ -509,7 +518,7 @@ const ConsumerDashboard=(props)=>{
                 <button className="fun-btn" onClick={viewCRC}>View CRC</button>
                 <br/>
                 {crc && (
-                    <div>
+                    <div className="certificate-card">
                         <b>CARBON REMOVAL CERTIFICATE</b>
                         <p>Owner : {crc.owner}</p>
                         <p>Amount retired : {crc.burnAmount} CCT</p>
@@ -705,18 +714,22 @@ const ValidatorDashboard=(props)=>{
 
     return (
         <React.Fragment>
-            <div>
-                <h1>VALIDATOR DASHBOARD</h1>
+            <div className="dashboard-shell">
+                <div className="dashboard-header">
+                    <p className="dashboard-kicker">Carbon Credit Ecosystem</p>
+                    <h1>Validator Dashboard</h1>
+                    <p className="dashboard-subtitle">Kiểm định NDVI, phê duyệt mint CCT và xác nhận retire để phát hành CRC.</p>
+                </div>
                 {/*wallet connection*/}
                 <br/>
                 <button className="connect-btn" onClick={handleConnectWallet}>Connect Wallet</button>
                 <br/>
-                <p>Wallet Address : {validatorAddress}</p>
+                <p className="wallet-chip">Wallet Address: {validatorAddress || "Chưa kết nối"}</p>
 
                 <div className="evidence-section">
                     <div className="gen-section">
                         <p>Generator Address : {addressGen}</p>
-                        <p>NDVI : {ndvi}</p>
+                        <p className="metric-chip">NDVI: <strong>{ndvi}</strong></p>
 
                         <br/>
                         <button className="fun-btn" type="button" onClick={verifyNDVI}>Verify NDVI</button>
@@ -727,7 +740,7 @@ const ValidatorDashboard=(props)=>{
                         <p>Sequestration amount : {sequestrationAmount} tons</p>
                         
                         <br/>
-                        <div class="approve-reject">
+                        <div className="approve-reject">
                             <button className="fun-btn" onClick={approveEvidence}>Approve CCT</button>
                             <button className="fun-btn" onClick={rejectEvidence}>Reject</button>
                         </div>
@@ -750,7 +763,7 @@ const ValidatorDashboard=(props)=>{
 }
 
 const UserDashboard=(props)=>{
-    const {userType}=props.location.state;
+    const userType = props.location.state?.userType || props.userType || props.forcedUserType || "generator";
     const {setIsLoggedIn}=props;
   
     let Component;
@@ -774,6 +787,7 @@ const UserDashboard=(props)=>{
     return (
     <React.Fragment>
         <div className="user-dashboard">
+            <div className="dashboard-backdrop"></div>
             <Component setIsLoggedIn={setIsLoggedIn}/>
         </div>
     </React.Fragment>
