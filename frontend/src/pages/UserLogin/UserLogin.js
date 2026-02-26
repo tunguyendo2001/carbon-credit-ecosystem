@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import "./UserLogin.css";
 
 const UserLogin = (props) => {
-    const { userType } = props.location.state;
-    const { setIsLoggedIn, setUserType } = props;
+    const userType = props.location.state?.userType || props.forcedUserType || "generator";
+    const { setIsLoggedIn, setUserType, routeBase = "" } = props;
     setUserType(userType);
+
+    const withBase = (path) => `${routeBase}${path}`;
 
     const [formData, setFormData] = useState({
         username: "",
@@ -114,7 +116,7 @@ const UserLogin = (props) => {
             setIsLoggedIn(true);
 
             props.history.push({
-                pathname: "/user-dashboard",
+                pathname: withBase("/user-dashboard"),
                 state: { userType },
             });
         } else {
@@ -124,9 +126,11 @@ const UserLogin = (props) => {
 
     return (
         <React.Fragment>
-            <div className="user-login">
-                <form className="login-form" onSubmit={handleSubmit}>
-                    <h1>{userType} LOGIN</h1>
+            <div className="user-login auth-page">
+                <form className="login-form auth-card" onSubmit={handleSubmit}>
+                    <p className="auth-kicker">Carbon Credit Ecosystem</p>
+                    <h1>{userType} Login</h1>
+                    <p className="auth-subtitle">Đăng nhập để tiếp tục flow demo end-to-end trên blockchain.</p>
                     <input
                         className="form-ip"
                         type="text"
@@ -145,7 +149,7 @@ const UserLogin = (props) => {
                     />
                 
                     <button type="submit" className="form-submit">
-                        Login
+                        Đăng nhập
                     </button>
                 </form>
             </div>

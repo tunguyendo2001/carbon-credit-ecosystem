@@ -10,24 +10,10 @@ const registerGenerator = async (formData) => {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-                firstName,
-                lastName,
-                email,
-                username,
-                password,
-            }),
+            body: JSON.stringify({ firstName, lastName, email, username, password }),
         });
 
-        if (response.ok) {
-            const data = await response.json();
-            console.log(data);
-            return true;
-        } else {
-            const error = await response.json();
-            console.log(error);
-            return false;
-        }
+        return response.ok;
     } catch (error) {
         console.error(error);
         return false;
@@ -43,24 +29,10 @@ const registerConsumer = async (formData) => {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-                firstName,
-                lastName,
-                email,
-                username,
-                password,
-            }),
+            body: JSON.stringify({ firstName, lastName, email, username, password }),
         });
 
-        if (response.ok) {
-            const data = await response.json();
-            console.log(data);
-            return true;
-        } else {
-            const error = await response.json();
-            console.log(error);
-            return false;
-        }
+        return response.ok;
     } catch (error) {
         console.error(error);
         return false;
@@ -76,204 +48,26 @@ const registerValidator = async (formData) => {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-                role,
-                firstName,
-                lastName,
-                email,
-                username,
-                password,
-            }),
+            body: JSON.stringify({ role, firstName, lastName, email, username, password }),
         });
 
-        if (response.ok) {
-            const data = await response.json();
-            console.log(data);
-            return true;
-        } else {
-            const error = await response.json();
-            console.log(error);
-            return false;
-        }
+        return response.ok;
     } catch (error) {
         console.error(error);
         return false;
     }
 };
 
-const GeneratorRegistration = (props,{setIsLoggedIn,userType}) => {
+const UserRegistration = (props) => {
+    const userType = props.location.state?.userType || props.forcedUserType || "generator";
+    const { setIsLoggedIn, setUserType, routeBase = "" } = props;
+    setUserType(userType);
+
+    const withBase = (path) => `${routeBase}${path}`;
+
     const [formData, setFormData] = useState({
-        firstName:"",
-        lastName:"",
-        email: "",
-        username: "",
-        password: "",
-    });
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prevData) => ({ ...prevData, [name]: value }));
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        let isRegistered = false;
-        isRegistered = await registerGenerator(formData);
-    
-        if (isRegistered) {
-            setIsLoggedIn(true);
-            props.history.push({
-                pathname: "/user-dashboard",
-                state: { userType },
-            });
-        } else {
-            alert("Registration Failed!");
-        }
-    }
-
-    return (   
-        <React.Fragment>
-            <form className="registration-form" onSubmit={handleSubmit}>
-                <h1>{props.userType} REGISTRATION</h1>
-                <div className="name-ip">
-                    <input
-                        className="form-ip"
-                        type="text"
-                        name="firstName"
-                        placeholder="First Name"
-                        value={formData.firstName}
-                        onChange={handleChange}
-                    />
-                    <input
-                        className="form-ip"
-                        type="text"
-                        name="lastName"
-                        placeholder="Last Name"
-                        value={formData.lastName}
-                        onChange={handleChange}
-                    />
-                </div>
-                
-                <input
-                    className="form-ip"
-                    type="email"
-                    name="email"
-                    placeholder="Email"
-                    value={formData.email}
-                    onChange={handleChange}
-                />
-                <input
-                    className="form-ip"
-                    type="text"
-                    name="username"
-                    placeholder="Username"
-                    value={formData.username}
-                    onChange={handleChange}
-                />
-                <input
-                    className="form-ip"
-                    type="password"
-                    name="password"
-                    placeholder="Password"
-                    value={formData.password}
-                    onChange={handleChange}
-                />
-                <button type="submit" className="form-submit"> Register </button>
-            </form>
-        </React.Fragment>
-    );
-};
-
-const ConsumerRegistration = (props,{setIsLoggedIn,userType}) => {
-    const [formData, setFormData] = useState({
-        firstName:"",
-        lastName:"",
-        email: "",
-        username: "",
-        password: "",
-    });
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prevData) => ({ ...prevData, [name]: value }));
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        let isRegistered = false;
-        isRegistered = await registerConsumer(formData);
-    
-        if (isRegistered) {
-            setIsLoggedIn(true);
-            props.history.push({
-                pathname: "/user-dashboard",
-                state: { userType },
-            });
-        } else {
-            alert("Registration Failed!");
-        }
-    }
-
-    return (   
-        <React.Fragment>
-            <form className="registration-form" onSubmit={handleSubmit}>
-                <h1>{props.userType} REGISTRATION</h1>
-
-                <div className="name-ip">
-                    <input
-                        className="form-ip"
-                        type="text"
-                        name="firstName"
-                        placeholder="First Name"
-                        value={formData.firstName}
-                        onChange={handleChange}
-                    />
-                    <input
-                        className="form-ip"
-                        type="text"
-                        name="lastName"
-                        placeholder="Last Name"
-                        value={formData.lastName}
-                        onChange={handleChange}
-                    />
-                </div>
-                
-                <input
-                    className="form-ip"
-                    type="email"
-                    name="email"
-                    placeholder="Email"
-                    value={formData.email}
-                    onChange={handleChange}
-                />
-                <input
-                    className="form-ip"
-                    type="text"
-                    name="username"
-                    placeholder="Username"
-                    value={formData.username}
-                    onChange={handleChange}
-                />
-                <input
-                    className="form-ip"
-                    type="password"
-                    name="password"
-                    placeholder="Password"
-                    value={formData.password}
-                    onChange={handleChange}
-                />
-                <button type="submit" className="form-submit"> Register </button>
-            </form>
-        </React.Fragment>
-    );
-};
-
-const ValidatorRegistration = (props,{setIsLoggedIn,userType}) => {
-    const [formData, setFormData] = useState({
-        firstName:"",
-        lastName:"",
+        firstName: "",
+        lastName: "",
         email: "",
         username: "",
         password: "",
@@ -282,122 +76,60 @@ const ValidatorRegistration = (props,{setIsLoggedIn,userType}) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData((prevData) => {
-            const updatedData = { ...prevData, [name]: value };
-            return updatedData;
-        });
+        setFormData((prevData) => ({ ...prevData, [name]: value }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        let isRegistered = await registerValidator(formData);
-    
+        let isRegistered = false;
+        if (userType === "generator") {
+            isRegistered = await registerGenerator(formData);
+        } else if (userType === "consumer") {
+            isRegistered = await registerConsumer(formData);
+        } else {
+            isRegistered = await registerValidator(formData);
+        }
+
         if (isRegistered) {
             setIsLoggedIn(true);
             props.history.push({
-                pathname: "/user-dashboard",
-                state: { userType,role: formData.role },
+                pathname: withBase("/user-dashboard"),
+                state: { userType, role: formData.role },
             });
         } else {
             alert("Registration Failed!");
         }
-    }
+    };
 
-    return (   
+    return (
         <React.Fragment>
-            <form className="registration-form" onSubmit={handleSubmit}>
-                <h1>{props.userType} REGISTRATION</h1>
+            <div className="user-registration auth-page">
+                <form className="registration-form auth-card" onSubmit={handleSubmit}>
+                    <p className="auth-kicker">Carbon Credit Ecosystem</p>
+                    <h1>{userType} Registration</h1>
+                    <p className="auth-subtitle">Tạo tài khoản để tham gia quy trình thẩm định và giao dịch tín chỉ carbon.</p>
 
-                <select 
-                    className="form-ip" 
-                    name="role" 
-                    value={formData.role} 
-                    onChange={handleChange}
-                    required
-                >
-                    <option value="gps-validator">GPS Validator</option>
-                    <option value="report-validator">Report Validator</option>
-                </select>
-                
-                <div className="name-ip">
-                    <input
-                        className="form-ip"
-                        type="text"
-                        name="firstName"
-                        placeholder="First Name"
-                        value={formData.firstName}
-                        onChange={handleChange}
-                    />
-                    <input
-                        className="form-ip"
-                        type="text"
-                        name="lastName"
-                        placeholder="Last Name"
-                        value={formData.lastName}
-                        onChange={handleChange}
-                    />
-                </div>
-                
-                <input
-                    className="form-ip"
-                    type="email"
-                    name="email"
-                    placeholder="Email"
-                    value={formData.email}
-                    onChange={handleChange}
-                />
-                <input
-                    className="form-ip"
-                    type="text"
-                    name="username"
-                    placeholder="Username"
-                    value={formData.username}
-                    onChange={handleChange}
-                />
-                <input
-                    className="form-ip"
-                    type="password"
-                    name="password"
-                    placeholder="Password"
-                    value={formData.password}
-                    onChange={handleChange}
-                />
-                <button type="submit" className="form-submit"> Register </button>
-            </form>
+                    {userType === "validator" && (
+                        <select className="form-ip" name="role" value={formData.role} onChange={handleChange} required>
+                            <option value="gps-validator">GPS Validator</option>
+                            <option value="report-validator">Report Validator</option>
+                        </select>
+                    )}
+
+                    <div className="name-ip">
+                        <input className="form-ip" type="text" name="firstName" placeholder="First Name" value={formData.firstName} onChange={handleChange} required />
+                        <input className="form-ip" type="text" name="lastName" placeholder="Last Name" value={formData.lastName} onChange={handleChange} required />
+                    </div>
+
+                    <input className="form-ip" type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
+                    <input className="form-ip" type="text" name="username" placeholder="Username" value={formData.username} onChange={handleChange} required />
+                    <input className="form-ip" type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} required />
+                    <button type="submit" className="form-submit">Đăng ký</button>
+                </form>
+            </div>
         </React.Fragment>
     );
 };
-
-const UserRegistration = (props) => {
-    const { userType } = props.location.state;
-    const { setIsLoggedIn, setUserType } = props;
-    setUserType(userType);
-
-
-    let Component;
-    switch (userType) {
-        case "generator":
-            Component = GeneratorRegistration;
-            break;
-        case "consumer":
-            Component = ConsumerRegistration;
-            break;
-        case "validator":
-            Component = ValidatorRegistration;
-            break;
-        default:
-            break;
-    }
-
-    return (
-    <React.Fragment>
-        <div className="user-registration">
-            <Component setIsLoggedIn={setIsLoggedIn} userType={userType}/>
-        </div>
-    </React.Fragment>
-    );
-};
-
 
 export default UserRegistration;
