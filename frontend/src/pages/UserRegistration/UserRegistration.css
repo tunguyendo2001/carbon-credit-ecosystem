@@ -1,68 +1,59 @@
-.user-registration{
+.user-registration {
+    min-height: 100vh;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    padding: 2rem 1rem;
 }
 
-.registration-form{
+.registration-form {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
+    gap: 0.65rem;
 }
 
-.form-ip{
-    margin-bottom: 10px;
-    padding: 15px;
-    border-radius: 5px;
-    border-radius: 5px;
+.form-ip {
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
     outline: none;
-    border: none;
-    background-color: #ccc;
+    border: 1px solid #bdd5c7;
+    background-color: #fff;
     font-size: 1em;
-    width: 30vw;
+    width: min(420px, 100%);
 }
 
-.form-submit{
-    width: fit-content;
+.form-submit {
     border: none;
     color: white;
-    background-color: green;
-    border-radius: 10px 10px;
-    padding: 10px 10px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    border-radius: 10px;
+    padding: 0.72rem 1.2rem;
     font-size: 1em;
+    min-width: 150px;
+    margin-top: 0.4rem;
 }
 
-.form-submit:hover{
+.form-submit:hover {
     cursor: pointer;
+    filter: brightness(1.05);
 }
 
-.role{
-    border-radius: 5px;
-    border: none;
-    font-size: 1.2em;
-    margin: 10px 10px;
+.name-ip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+    width: min(420px, 100%);
 }
 
-.name-ip{
-    display: flex;
-    gap: 10px; 
-    width: 100%; 
-    justify-content: center;
+.name-ip .form-ip {
+    width: 100%;
 }
 
-@media screen and (max-width:600px) {    
-    .form-ip{
-        width: 50vw;
-    }
-
-    .name-ip{
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 2px;
+@media screen and (max-width: 700px) {
+    .name-ip {
+        grid-template-columns: 1fr;
     }
 }

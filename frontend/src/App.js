@@ -2,70 +2,108 @@ import {
   BrowserRouter as Router,
   Route,
   Switch,
+  Redirect,
 } from "react-router-dom";
 import UserLogin from "./pages/UserLogin/UserLogin";
 import UserRegistration from "./pages/UserRegistration/UserRegistration";
 import UserDashboard from "./pages/UserDashboard/UserDashboard";
-import React from "react";
-import { useState } from "react";
+import React, { useMemo, useState } from "react";
 import UserSelection from "./pages/UserSelection/UserSelection";
-import { Redirect } from "react-router-dom/cjs/react-router-dom.min";
 
-const App=()=>{
-  const [isLoggedIn, setIsLoggedIn]=useState(false);
-  const [userType, setUserType]=useState("generator");
+const App = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userType, setUserType] = useState("generator");
 
-  let routes;
-  if(isLoggedIn)
-  {
-    routes=(
-      <Switch>
-        <Route 
-          path="/user-dashboard" 
-          exact 
-          render={(props)=>{
-            return <UserDashboard {...props} userType={userType} setIsLoggedIn={setIsLoggedIn}/>;
-          }}
-        />
+  const { routeBase, forcedUserType } = useMemo(() => {
+    const path = window.location.pathname;
+    const firstSegment = path.split("/").filter(Boolean)[0] || "";
 
-      </Switch>); 
-  }else
-  {
-    routes=(
-      <Switch>
-        <Route 
-          path="/user-selection" 
-          exact 
-          render={(props)=>{
-            return <UserSelection {...props}/>;
-          }}
-        />
+    const portalUserMap = {
+      generator: "generator",
+      consumer: "consumer",
+      validator: "validator",
+      validator1: "validator",
+      validator2: "validator",
+    };
 
-        <Route 
-          path="/user-login" 
-          exact 
-          render={(props)=>{
-            return <UserLogin {...props}  setIsLoggedIn={setIsLoggedIn} setUserType={setUserType}/>;
-          }}
-        />
+    if (portalUserMap[firstSegment]) {
+      return {
+        routeBase: `/${firstSegment}`,
+        forcedUserType: portalUserMap[firstSegment],
+      };
+    }
 
-        <Route 
-          path="/user-registration" 
-          exact 
-          render={(props)=>{
-            return <UserRegistration {...props} setIsLoggedIn={setIsLoggedIn} setUserType={setUserType}/>;
-          }}
-        />
+    return { routeBase: "", forcedUserType: null };
+  }, []);
 
-        <Redirect to="/user-selection"></Redirect>
-      </Switch>);
-  }
+  const withBase = (path) => `${routeBase}${path}`;
+
+  const commonProps = {
+    routeBase,
+    forcedUserType,
+    setUserType,
+  };
+
+  const routes = isLoggedIn ? (
+    <Switch>
+      <Route
+        path={withBase("/user-dashboard")}
+        exact
+        render={(props) => {
+          return (
+            <UserDashboard
+              {...props}
+              userType={userType}
+              setIsLoggedIn={setIsLoggedIn}
+            />
+          );
+        }}
+      />
+      <Redirect to={withBase("/user-dashboard")}></Redirect>
+    </Switch>
+  ) : (
+    <Switch>
+      <Route
+        path={withBase("/user-selection")}
+        exact
+        render={(props) => {
+          return <UserSelection {...props} {...commonProps} />;
+        }}
+      />
+
+      <Route
+        path={withBase("/user-login")}
+        exact
+        render={(props) => {
+          return <UserLogin {...props} setIsLoggedIn={setIsLoggedIn} {...commonProps} />;
+        }}
+      />
+
+      <Route
+        path={withBase("/user-registration")}
+        exact
+        render={(props) => {
+          return (
+            <UserRegistration
+              {...props}
+              setIsLoggedIn={setIsLoggedIn}
+              {...commonProps}
+            />
+          );
+        }}
+      />
+
+      <Route path={routeBase || "/"} exact>
+        <Redirect to={withBase("/user-selection")}></Redirect>
+      </Route>
+
+      <Redirect to={withBase("/user-selection")}></Redirect>
+    </Switch>
+  );
 
   return (
     <Router>
-      <div className="App">
-        {routes}
-      </div>
+      <div className="app-shell">{routes}</div>
     </Router>
   );
 };
