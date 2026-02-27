@@ -1,195 +1,464 @@
-Dưới đây là nội dung tệp `README.md` hoàn chỉnh, chuyên nghiệp được biên soạn dựa trên cấu trúc mã nguồn và các tài liệu nghiệp vụ của dự án **Carbon Credit Ecosystem (CCE)**.
+# 🌿 Carbon Credit Ecosystem (CCE) — Blockchain Based
+
+Hệ sinh thái tín chỉ Carbon phi tập trung sử dụng công nghệ **Blockchain (Ethereum/Polygon)**, **dữ liệu vệ tinh Sentinel-2** và mô hình **DeFi (AMM)** để minh bạch hóa thị trường tín chỉ carbon toàn cầu.
+
+> Dự án được phát triển dựa trên nghiên cứu *"A Blockchain-based Carbon Credit Ecosystem"* — Dr. Soheil Saraji & Dr. Mike Borowczak.
 
 ---
 
-# Carbon Credit Ecosystem (CCE) - Blockchain Based
+## 📋 Mục lục
 
-Hệ sinh thái tín chỉ Carbon phi tập trung sử dụng công nghệ Blockchain, dữ liệu vệ tinh (Sentinel-2) và mô hình tài chính phi tập trung (DeFi) để minh bạch hóa thị trường tín chỉ carbon toàn cầu.
+- [Tổng quan hệ thống](#-tổng-quan-hệ-thống)
+- [Thành phần hệ thống](#-thành-phần-hệ-thống)
+- [Luồng thực thi](#-luồng-thực-thi)
+- [Cấu trúc thư mục](#-cấu-trúc-thư-mục)
+- [Yêu cầu hệ thống](#-yêu-cầu-hệ-thống)
+- [Hướng dẫn cài đặt & cấu hình](#-hướng-dẫn-cài-đặt--cấu-hình)
+- [Triển khai Smart Contracts](#-triển-khai-smart-contracts)
+- [Kịch bản Demo End-to-End](#-kịch-bản-demo-end-to-end)
 
-## 🌟 Giới thiệu tổng quan
+---
 
-Dự án giải quyết các vấn đề chí mạng của thị trường carbon truyền thống như:
+## 🌐 Tổng quan hệ thống
 
-* **Double-spending:** Ngăn chặn việc một tín chỉ bị bán nhiều lần.
-* **Lack of Transparency:** Minh bạch hóa toàn bộ quy trình từ thẩm định đến tiêu hủy.
-* **Liquidity Issues:** Tạo thanh khoản tức thì thông qua mô hình AMM (Automated Market Maker).
+Hệ thống giải quyết các vấn đề cốt lõi của thị trường carbon truyền thống:
 
-## 🏗 Kiến trúc hệ thống
+| Vấn đề | Giải pháp |
+|--------|-----------|
+| **Double-spending** | Token ERC-20 on-chain — mỗi tín chỉ chỉ tồn tại duy nhất |
+| **Thiếu minh bạch** | Toàn bộ quy trình từ thẩm định → phát hành → tiêu hủy được ghi trên blockchain |
+| **Thanh khoản kém** | AMM (Automated Market Maker) cho phép mua/bán tức thì không qua trung gian |
+| **Gian lận dữ liệu** | Validator độc lập tái tính NDVI từ vệ tinh Sentinel-2 để đối chiếu |
 
-Hệ thống được thiết kế theo mô hình 3 lớp:
-
-1. **Application Layer:** Giao diện React.js Dashboard tích hợp ví MetaMask.
-2. **Smart Contract Layer:** Logic nghiệp vụ chạy trên EVM (Solidity) gồm:
-* `MultiValidator.sol`: Cơ chế đồng thuận xác thực đa bên.
-* `MintTokens.sol`: Quản lý tài sản ERC-20 (Carbon Credits).
-* `MintNFT.sol`: Cấp chứng nhận ERC-721 sau khi tiêu hủy tín chỉ.
-* `AMM.sol`: Giao dịch tự động không qua trung gian.
-
-
-3. **Infrastructure Layer:** Blockchain (Ethereum/Polygon) và lưu trữ phi tập trung (IPFS).
-
-## 🚀 Công nghệ sử dụng
-
-* **Blockchain:** Solidity, Truffle, Web3.js.
-* **Backend:** Node.js (Express), Python (Flask - Xử lý dữ liệu vệ tinh Sentinel Hub).
-* **Frontend:** React.js, MetaMask API.
-* **Storage:** IPFS (Lưu trữ báo cáo & Metadata).
-
-## 🛠 Hướng dẫn cài đặt
-
-### 1. Yêu cầu hệ thống
-
-* Node.js (v16+)
-* Python 3.8+
-* Truffle Suite
-* MetaMask Extension trên trình duyệt.
-
-### 2. Triển khai Smart Contracts
-
-```bash
-# Cài đặt Truffle toàn cục
-npm install -g truffle
-
-# Biên dịch và triển khai lên mạng thử nghiệm
-truffle compile
-truffle migrate --network development
+### Kiến trúc 3 lớp
 
 ```
-
-### 3. Cài đặt Backend
-
-```bash
-cd backend
-npm install
-
-# Cài đặt dependencies cho Python
-pip install flask sentinelhub numpy
-
-# Khởi chạy server
-npm start
-# Trong một terminal khác, chạy Flask app
-python app.py
-
+┌────────────────────────────────────────────────────┐
+│              Application Layer                     │
+│   React.js Dashboard  ×  MetaMask  ×  WebSocket    │
+├────────────────────────────────────────────────────┤
+│             Smart Contract Layer (EVM)             │
+│  MultiValidator  ·  MintTokens  ·  MintNFT  ·  AMM │
+├────────────────────────────────────────────────────┤
+│              Infrastructure Layer                  │
+│   Ganache/Ethereum  ·  IPFS  ·  MongoDB            │
+└────────────────────────────────────────────────────┘
 ```
 
-### 4. Cài đặt Frontend
+---
 
-```bash
-cd frontend
-npm install
-npm start
+## 🧩 Thành phần hệ thống
+
+### Smart Contracts (`/contracts`)
+
+| Contract | Chuẩn | Mô tả |
+|----------|-------|-------|
+| `MultiValidator.sol` | — | Cơ chế đồng thuận đa bên; yêu cầu ≥ 2 Validator ký để mint/burn |
+| `MintTokens.sol` | ERC-20 | Phát hành và quản lý Carbon Credit Token (CCT) |
+| `MintNFT.sol` | ERC-721 | Cấp chứng nhận Carbon Removal Certificate (CRC) sau khi tiêu hủy tín chỉ |
+| `AMM.sol` | — | Sàn giao dịch tự động; cho phép niêm yết và mua CCT bằng ETH |
+
+### Backend
+
+| Thành phần | Công nghệ | Cổng | Chức năng |
+|------------|-----------|------|-----------|
+| **Flask API** | Python 3 | `5000` | Tính NDVI qua Sentinel Hub API; ước tính CO₂ hấp thụ |
+| **Express API** | Node.js | `8000` | Auth (đăng ký/đăng nhập); relay thông báo WebSocket |
+| **WebSocket Server** | ws | `8080` | Thông báo real-time từ Generator → Validators và Consumer → Validators |
+| **MongoDB** | MongoDB | `27017` | Lưu tài khoản off-chain (Generator, Consumer, Validator) |
+
+### Frontend (`/frontend`)
+
+Ứng dụng React có thể chạy ở **4 chế độ portal** (mỗi vai trò một cổng riêng):
+
+| Portal | Cổng | Vai trò | Chức năng chính |
+|--------|------|---------|-----------------|
+| Generator | `3000` | Chủ dự án rừng | Chọn vùng bản đồ, tính NDVI, gửi cho Validator, niêm yết CCT lên AMM |
+| Consumer | `3001` | Doanh nghiệp mua tín chỉ | Mua CCT từ AMM, retire (tiêu hủy) để nhận CRC NFT |
+| Validator 1 | `3002` | Kiểm định viên | Xác minh NDVI, ước tính CO₂, approve mint CCT và approve CRC |
+| Validator 2 | `3003` | Kiểm định viên | Tương tự Validator 1 (cần đủ 2 chữ ký) |
+
+---
+
+## 🔄 Luồng thực thi
 
 ```
+Generator                  Validator 1 & 2                Consumer
+    │                            │                           │
+    ├─ Chọn vùng rừng            │                           │
+    ├─ Tính NDVI (Sentinel-2)    │                           │
+    ├─ Gửi NDVI ──────────────►  │                           │
+    │                            ├─ Xác minh NDVI            │
+    │                            ├─ Ước tính CO₂             │
+    │                            ├─ Approve CCT (×2) ──────► │ [on-chain: mintTokens]
+    │◄─────────────── CCT Token ──┘                          │
+    │                                                        │
+    ├─ Niêm yết CCT lên AMM                                  │
+    │                                                        │
+    │                                               ├─ Fetch AMM listings
+    │                                               ├─ Mua CCT (ETH → CCT)
+    │                                               ├─ Retire CCT ──────────►│
+    │                                                        │◄──────────────┤
+    │                                                        ├─ Approve CRC (×2)
+    │                                                        │  [on-chain: burnFrom + mintCRC]
+    │                                                        │
+    │                                               ◄─── CRC NFT (ERC-721) ──┘
+```
 
-## 🔄 Luồng dữ liệu chính (Data Flow)
+**Chi tiết từng bước:**
 
-1. **Thẩm định:** Validator kiểm tra báo cáo dự án trên IPFS và ký phê duyệt on-chain.
-2. **Phát hành:** Khi đạt >70% đồng thuận, Smart Contract tự động Mint Carbon Token (ERC-20).
-3. **Giao dịch:** Token được đưa vào AMM Pool để người dùng mua bằng Stablecoin.
-4. **Bù đắp:** Consumer thực hiện lệnh `Burn` token để nhận NFT chứng nhận quyền sở hữu vĩnh viễn và ghi nhận giảm phát thải.
+1. **Thẩm định NDVI** — Generator chọn vùng đất trên bản đồ Leaflet → gọi Sentinel Hub API để lấy ảnh vệ tinh → tính chỉ số NDVI → gửi qua WebSocket cho Validators.
+2. **Kiểm định độc lập** — Mỗi Validator tự gọi lại Sentinel Hub để tính NDVI từ cùng tọa độ, đối chiếu với dữ liệu Generator, rồi ước tính lượng CO₂ hấp thụ.
+3. **Phát hành CCT** — Sau khi 2 Validator `voteToApprove()` on-chain, `MultiValidator` tự động gọi `mintTokens()` để phát hành CCT (ERC-20) cho Generator.
+4. **Giao dịch AMM** — Generator `approve()` cho contract AMM rồi `listTokens()`. Consumer `fetchListings()` → `buyTokens()` bằng ETH.
+5. **Retire & Cấp CRC** — Consumer `approve()` cho `MultiValidator` rồi gửi yêu cầu retire. Sau khi 2 Validator `burnTokens()` on-chain: CCT bị đốt, CRC NFT (ERC-721) được mint cho Consumer.
+
+---
 
 ## 📂 Cấu trúc thư mục
 
-* `/contracts`: Mã nguồn Smart Contracts (Solidity).
-* `/migrations`: Script triển khai hợp đồng.
-* `/backend`: API server, xử lý IPFS và logic Oracle vệ tinh (Python).
-* `/frontend`: Giao diện Dashboard cho người dùng (React).
-* `/abis`: File định nghĩa giao diện hợp đồng thông minh cho Web3.
-
-## 📄 Giấy phép
-
-Dự án được phát hành dưới giấy phép MIT.
+```
+carbon-credit-ecosystem/
+├── contracts/
+│   ├── AMM.sol
+│   ├── MintNFT.sol
+│   ├── MintTokens.sol
+│   └── MultiValidator.sol
+├── migrations/
+│   └── 2_deploy_contracts.js
+├── backend/
+│   ├── app.py                  # Flask: NDVI & CO₂ API
+│   ├── server.js               # Express: Auth & WebSocket relay
+│   ├── websocket.js            # WebSocket server
+│   ├── controllers/
+│   │   └── user-controller.js
+│   ├── models/
+│   │   ├── generator.js
+│   │   ├── consumer.js
+│   │   └── validator.js
+│   ├── handlers/
+│   │   └── IPFSHandler.js
+│   ├── package.json
+│   └── .env.example
+├── frontend/
+│   ├── src/
+│   │   ├── abis/               # ABI JSON sau khi compile (tự động sinh)
+│   │   ├── pages/
+│   │   │   ├── UserDashboard/  # Dashboard Generator / Consumer / Validator
+│   │   │   ├── UserLogin/
+│   │   │   ├── UserRegistration/
+│   │   │   └── UserSelection/
+│   │   └── handlers/
+│   │       └── Web3Handler.js
+│   ├── package.json
+│   └── Dockerfile.nginx
+├── docker-compose.yml
+├── truffle-config.js
+└── README.md
+```
 
 ---
 
-*Dự án được phát triển dựa trên nghiên cứu "A Blockchain-based Carbon Credit Ecosystem" của Dr. Soheil Saraji & Dr. Mike Borowczak.*
+## ⚙️ Yêu cầu hệ thống
 
-## tund23
+| Công cụ | Phiên bản tối thiểu |
+|---------|---------------------|
+| Node.js | 16+ |
+| Python | 3.8+ |
+| Truffle Suite | Mới nhất |
+| Ganache | Mới nhất (`npm install -g ganache`) |
+| MongoDB | 6+ |
+| MetaMask | Extension trên trình duyệt |
+
+---
+
+## 🛠 Hướng dẫn cài đặt & cấu hình
+
+### 1. Clone repo
 
 ```bash
-# tab 1
-cd backend && source venv/bin/activate && python app.py
-# tab 2
-cd backend && npm start
-# tab 3
+git clone <repo-url>
+cd carbon-credit-ecosystem
+```
+
+### 2. Cấu hình biến môi trường
+
+**Backend Python** — tạo file `backend/.env` từ mẫu:
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+Điền các giá trị vào `backend/.env`:
+
+```env
+FLASK_APP=app.py
+SECRET_KEY=your_secret_key_here
+
+# Lấy từ https://apps.sentinel-hub.com/dashboard/
+SENTINAL_HUB_CLIENT_ID=your_sentinel_client_id
+SENTINAL_HUB_CLIENT_SECRET=your_sentinel_client_secret
+SENTINAL_HUB_INSTANCE_ID=your_sentinel_instance_id
+```
+
+**Backend Node.js** — các biến DB được đọc từ `backend/nodemon.json` (đã có sẵn cho dev):
+
+```json
+{
+  "env": {
+    "DB_USER": "admin",
+    "DB_PASSWORD": "admin",
+    "DB_NAME": "off-chain-db",
+    "DB_URL": "localhost:27017"
+  }
+}
+```
+
+Hoặc đặt biến `MONGO_URI` trực tiếp:
+
+```bash
+export MONGO_URI=mongodb://admin:admin@localhost:27017/off-chain-db?authSource=admin
+```
+
+**Frontend** — nếu backend chạy trên host khác, tạo `frontend/.env`:
+
+```env
+REACT_APP_API_URL=http://localhost:8000
+```
+
+> Mặc định frontend gọi API tại `http://localhost:8000` (hardcode trong code); chỉ cần đặt biến này nếu muốn override.
+
+### 3. Cài đặt dependencies
+
+**Backend Node.js:**
+```bash
+cd backend
+npm install
+```
+
+**Backend Python (khuyên dùng virtualenv):**
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate          # Linux/macOS
+# venv\Scripts\activate           # Windows
+pip install flask sentinelhub numpy flask_cors python-dotenv pillow
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm install
+```
+
+**Smart Contracts:**
+```bash
+npm install -g truffle
+```
+
+---
+
+## 🚀 Triển khai Smart Contracts
+
+### Bước 1 — Khởi động Ganache (local blockchain)
+
+```bash
 ganache --port 8545 --chain.networkId 5777
-# tab 4
-cd frontend && npm run start-generator
-# tab 5 - build & deploy contract use truffle
-rm -r build
+```
+
+> Ganache sẽ in ra danh sách 10 tài khoản với private key. Ghi lại các địa chỉ để import vào MetaMask.
+
+### Bước 2 — Compile & Deploy contracts
+
+```bash
+# Xóa build cũ (nếu có)
+rm -rf build/
+
+# Compile tất cả contracts
 truffle compile --all
+
+# Deploy lên mạng development
 truffle migrate --reset --network development
 ```
 
-## 🎬 Kịch bản Demo: Hệ sinh thái Tín chỉ Carbon (End-to-End)
-📌 Chuẩn bị trước khi Demo:
-Mở sẵn 4 tab trình duyệt cho 4 portal: Generator, Validator 1, Validator 2, và Consumer. Đảm bảo Ganache đang chạy và MetaMask đã được import sẵn các tài khoản.
+> ABI JSON sẽ được tự động sinh ra tại `frontend/src/abis/` (được cấu hình trong `truffle-config.js`).
 
-### Bước 1: Khởi tạo dự án và Yêu cầu cấp tín chỉ (Tại tab Generator)
+### Bước 3 — Import tài khoản vào MetaMask
 
-Chọn đúng tài khoản Generator trên MetaMask.
+1. Mở MetaMask → **Add Network** với thông số:
+   - Network Name: `Ganache Local`
+   - RPC URL: `http://127.0.0.1:8545`
+   - Chain ID: `5777`
+   - Currency Symbol: `ETH`
 
-Click "Connect Wallet" để liên kết ví.
+2. Import private key từ Ganache output:
+   - `accounts[0]` → dùng cho **Validator** (deploy MultiValidator)
+   - `accounts[1]` → dùng cho **Generator**
+   - `accounts[2]` → dùng cho **Consumer** (deploy AMM)
+   - `accounts[3]` → dùng cho **Validator 2** (tài khoản bổ sung)
 
-Trên bản đồ Leaflet, click chọn một vùng rừng (hệ thống sẽ vẽ một khung chữ nhật bao quanh).
+---
 
-Click "Calculate NDVI" để gọi AI/Vệ tinh phân tích chỉ số mảng xanh.
+## ▶️ Chạy các dịch vụ
 
-Click "Send NDVI" để gửi dữ liệu này lên hệ thống (WebSocket sẽ lập tức báo tin cho các Validators).
+Mở **5 terminal** riêng biệt và chạy lần lượt:
 
-### Bước 2: Kiểm định và Phê duyệt phát hành (Tại tab Validator 1 & Validator 2)
+```bash
+# Terminal 1 — Flask API (NDVI & CO₂)
+cd backend
+source venv/bin/activate
+python app.py
+# Chạy tại http://localhost:5000
 
-Chuyển sang tài khoản Validator 1 trên MetaMask và tab Validator 1. Click "Connect Wallet".
+# Terminal 2 — Express API + WebSocket relay
+cd backend
+npm start
+# Chạy tại http://localhost:8000 và ws://localhost:8080
 
-Click "Verify NDVI" để hệ thống tự tính toán lại nhằm đối chiếu, tránh việc Generator gian lận số liệu.
+# Terminal 3 — Ganache (nếu chưa chạy)
+ganache --port 8545 --chain.networkId 5777
 
-Click "Estimate CO2 Sequestration" để quy đổi chỉ số NDVI thành lượng CO2 hấp thụ và số Tín chỉ (CCT) tương ứng.
+# Terminal 4 — Frontend Generator portal
+cd frontend
+npm run start-generator
+# Chạy tại http://localhost:3000
 
-Click "Approve CCT" và ký giao dịch trên MetaMask để bỏ phiếu đồng thuận.
+# Terminal 5 — Frontend Consumer portal (tuỳ chọn)
+cd frontend
+npm run start-consumer
+# Chạy tại http://localhost:3001
+```
 
-Lặp lại y hệt 4 thao tác trên tại tab Validator 2. (Vì Smart Contract yêu cầu đa chữ ký, khi đủ 2 phiếu, Token CCT sẽ tự động được đúc và gửi cho Generator).
+**Các lệnh script frontend đầy đủ:**
 
-### Bước 3: Nhận Token và Niêm yết lên sàn giao dịch (Tại tab Generator)
+| Lệnh | Cổng | Portal |
+|------|------|--------|
+| `npm run start-generator` | 3000 | Generator |
+| `npm run start-consumer` | 3001 | Consumer |
+| `npm run start-validator` | 3002 | Validator 1 |
+| `npm run start-validator-2` | 3003 | Validator 2 |
 
-Quay lại tab Generator, click "View CCT" để kiểm tra số dư Token ERC-20 vừa được đúc.
+> **Lưu ý:** Cần đảm bảo MongoDB đang chạy trước khi khởi động Express server. Nếu dùng Docker: `docker run -d -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=admin mongo`
 
-Kéo xuống mục AMM, nhập số lượng CCT muốn bán và giá bán (ETH/CCT).
+---
 
-Click "List on AMM". (Hệ thống sẽ yêu cầu ký MetaMask 2 lần: Lần 1 để cấp quyền cho sàn AMM, Lần 2 để thực sự niêm yết lên sàn).
+## 🎬 Kịch bản Demo End-to-End
 
-### Bước 4: Mua Tín chỉ Carbon (Tại tab Consumer)
+### Chuẩn bị
 
-Chuyển sang tài khoản Consumer trên MetaMask và tab Consumer. Click "Connect Wallet".
+- Mở **4 tab trình duyệt** cho 4 portal: Generator (`3000`), Validator 1 (`3002`), Validator 2 (`3003`), Consumer (`3001`).
+- Đảm bảo Ganache đang chạy và MetaMask đã import đủ tài khoản.
+- Mỗi tab chọn đúng tài khoản MetaMask tương ứng.
 
-Click "Fetch from AMM" để tải danh sách các đơn hàng đang được bán trên sàn.
+---
 
-Chọn đơn hàng của Generator, nhập số lượng muốn mua và click "Buy CCT".
+### Bước 1 — Đăng ký & Đăng nhập
 
-Ký giao dịch trên MetaMask để thanh toán bằng ETH và nhận CCT về ví.
+Tại mỗi portal, truy cập trang **User Selection** → chọn đúng vai trò → **Đăng ký** tài khoản (lần đầu) hoặc **Đăng nhập** (đã có tài khoản).
 
-Click "View CCT" (phía dưới) để xác nhận số dư tín chỉ vừa mua thành công.
+---
 
-### Bước 5: Bù đắp phát thải - Tiêu hủy tín chỉ (Tại tab Consumer)
+### Bước 2 — Generator: Đo NDVI & Gửi dữ liệu
 
-Kéo xuống mục Retire, nhập số lượng CCT muốn tiêu hủy để bù đắp lượng Carbon xả thải của doanh nghiệp.
+> **Tab Generator** | MetaMask: `accounts[1]`
 
-Click "Retire CCT".
+1. Click **"Connect Wallet"** → ký xác nhận trong MetaMask.
+2. Trên bản đồ Leaflet, click vào một **vùng rừng** — hệ thống sẽ vẽ khung chữ nhật bao quanh.
+3. Click **"Calculate NDVI"** → Flask API gọi Sentinel Hub, tính chỉ số NDVI từ ảnh vệ tinh.
+4. Click **"Send NDVI"** → dữ liệu được gửi qua WebSocket tới tất cả Validators đang online.
 
-Ký giao dịch trên MetaMask để cấp quyền cho Validator thu hồi số token này. (Lúc này WebSocket sẽ báo tin cho Validators).
+---
 
-### Bước 6: Xác nhận tiêu hủy và Cấp Chứng nhận (Tại tab Validator 1 & Validator 2)
+### Bước 3 — Validator 1 & 2: Kiểm định & Approve CCT
 
-Quay lại tab Validator 1, lúc này màn hình đã hiện yêu cầu tiêu hủy của Consumer.
+> **Tab Validator 1** | MetaMask: `accounts[0]`  
+> **Tab Validator 2** | MetaMask: `accounts[3]`
 
-Click "Approve CRC" và ký MetaMask để thực hiện đốt token (Burn).
+Thực hiện **lần lượt tại cả 2 tab Validator**:
 
-Lặp lại thao tác "Approve CRC" tại tab Validator 2 để hoàn tất sự đồng thuận. Sau bước này, một NFT Chứng nhận (ERC-721) sẽ được đúc cho Consumer.
+1. Click **"Connect Wallet"**.
+2. Click **"Verify NDVI"** → Flask API tự tính lại NDVI từ cùng tọa độ để đối chiếu.
+3. Click **"Estimate CO₂ Sequestration"** → quy đổi NDVI thành lượng CO₂ và số CCT tương ứng.
+4. Click **"Approve CCT"** → ký giao dịch `voteToApprove()` trên MetaMask.
 
-### Bước 7: Nhận NFT Chứng nhận Bù đắp Carbon (Tại tab Consumer)
+> ✅ Sau khi **Validator thứ 2** approve, Smart Contract tự động `mintTokens()` — CCT (ERC-20) được phát hành vào ví Generator.
 
-Quay lại tab Consumer lần cuối.
+---
 
-Click nút "View CRC".
+### Bước 4 — Generator: Kiểm tra số dư & Niêm yết lên AMM
 
-Thông tin chi tiết của Carbon Removal Certificate (NFT) sẽ hiện ra, chứng minh doanh nghiệp đã tiêu hủy thành công số lượng tín chỉ được ghi nhận vĩnh viễn trên Blockchain! 🎉
+> **Tab Generator**
 
+1. Click **"View CCT"** → kiểm tra số dư CCT vừa nhận.
+2. Nhập số lượng CCT muốn bán và giá ETH/CCT.
+3. Click **"List on AMM"**:
+   - MetaMask ký lần 1: `approve()` — cấp quyền cho AMM contract.
+   - MetaMask ký lần 2: `listTokens()` — niêm yết lên sàn.
+
+---
+
+### Bước 5 — Consumer: Mua CCT từ AMM
+
+> **Tab Consumer** | MetaMask: `accounts[2]`
+
+1. Click **"Connect Wallet"**.
+2. Click **"Fetch from AMM"** → tải danh sách đang bán.
+3. Click vào listing của Generator để chọn.
+4. Nhập số lượng CCT muốn mua → click **"Buy CCT"** → ký MetaMask (thanh toán ETH).
+5. Click **"View CCT"** → xác nhận số dư CCT trong ví.
+
+---
+
+### Bước 6 — Consumer: Retire CCT (Bù đắp phát thải)
+
+> **Tab Consumer**
+
+1. Nhập số lượng CCT muốn tiêu hủy vào ô **Retire**.
+2. Click **"Retire CCT"** → MetaMask ký `approve()` cho MultiValidator.
+3. Hệ thống gửi yêu cầu retire qua WebSocket tới Validators.
+
+---
+
+### Bước 7 — Validator 1 & 2: Approve CRC
+
+> **Tab Validator 1** và **Tab Validator 2**
+
+Màn hình Validator hiển thị yêu cầu retire mới từ Consumer.
+
+1. Click **"Approve CRC"** → ký MetaMask để gọi `burnTokens()`.
+2. Lặp lại tại **Validator 2**.
+
+> ✅ Sau khi cả 2 Validator approve:  
+> - CCT của Consumer bị đốt (`burnFrom`).  
+> - NFT chứng nhận CRC (ERC-721) được mint vào ví Consumer.
+
+---
+
+### Bước 8 — Consumer: Xem CRC NFT
+
+> **Tab Consumer**
+
+1. Click **"View CRC"** → Smart Contract trả về thông tin chứng nhận:
+   - Địa chỉ ví chủ sở hữu
+   - Số lượng CCT đã retire
+   - Timestamp ghi nhận on-chain
+
+🎉 **Hoàn tất luồng demo!** Doanh nghiệp đã có bằng chứng bù đắp carbon được ghi vĩnh viễn trên blockchain.
+
+---
+
+## 🐳 Chạy bằng Docker Compose (Tuỳ chọn)
+
+```bash
+docker-compose up --build
+```
+
+Sau khi các container khởi động, vẫn cần chạy thủ công bước deploy contracts:
+
+```bash
+truffle migrate --reset --network development
+```
+
+Truy cập frontend tại `http://localhost`, mở 4 tab mà đăng nhập với từng role user.
+
+---
