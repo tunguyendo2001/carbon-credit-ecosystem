@@ -29,7 +29,8 @@ const App = () => {
     if (portalUserMap[firstSegment]) {
       return {
         routeBase: `/${firstSegment}`,
-        forcedUserType: portalUserMap[firstSegment],
+        // forcedUserType: portalUserMap[firstSegment],
+        forcedUserType: null // open 1 path for all roles
       };
     }
 

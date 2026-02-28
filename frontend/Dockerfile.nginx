@@ -1,28 +1,20 @@
-# Stage 1: Build apps
+# Stage 1: Build app
 FROM node:18-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
 
-# Build cho Generator
-RUN REACT_APP_TITLE='Generator' PUBLIC_URL='/generator' npm run build && mv build build-gen
-# Build cho Consumer
-RUN REACT_APP_TITLE='Consumer' PUBLIC_URL='/consumer' npm run build && mv build build-con
-# Build cho Validator 1
-RUN REACT_APP_TITLE='Validator' PUBLIC_URL='/validator1' npm run build && mv build build-val1
-# Build cho Validator 2
-RUN REACT_APP_TITLE='Validator' PUBLIC_URL='/validator2' npm run build && mv build build-val2
+# Build duy nhất 1 bản với title là 'Carbon Credit Eco'
+RUN REACT_APP_TITLE='Carbon Credit Eco' PUBLIC_URL='/' npm run build
 
 # Stage 2: Serve với Nginx
 FROM nginx:alpine
 # Copy cấu hình Nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-# Copy các bản build vào đúng thư mục
-COPY --from=builder /app/build-gen /usr/share/nginx/html/generator
-COPY --from=builder /app/build-con /usr/share/nginx/html/consumer
-COPY --from=builder /app/build-val1 /usr/share/nginx/html/validator1
-COPY --from=builder /app/build-val2 /usr/share/nginx/html/validator2
+
+# Copy bản build vào thư mục gốc của nginx
+COPY --from=builder /app/build /usr/share/nginx/html
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

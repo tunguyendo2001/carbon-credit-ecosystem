@@ -120,7 +120,7 @@ const GeneratorDashboard = (props) => {
   const handleNDVICalcFromMap = async () => {
     await runWithLoading("calc-ndvi", async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/calculate-ndvi", {
+        const response = await fetch(`${process.env.REACT_APP_PYTHON_BE_URL}/api/calculate-ndvi`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ bounds }),
@@ -144,7 +144,7 @@ const GeneratorDashboard = (props) => {
   const sendNDVI = async () => {
     await runWithLoading("send-ndvi", async () => {
       try {
-        const response = await fetch("http://localhost:8000/api/send-ndvi", {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/send-ndvi`, {
           method: "POST",
           headers: {
             Accept: "application/json",
@@ -465,7 +465,7 @@ const ConsumerDashboard = (props) => {
         showToast("info", "Đang chờ ký Approve retire trên MetaMask...");
         await mintContract.methods.approve(multiValidatorNetwork.address, amountInWei).send({ from: consumerAddress });
 
-        const response = await fetch("http://localhost:8000/api/retire-cct", {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/retire-cct`, {
           method: "POST",
           headers: {
             Accept: "application/json",
@@ -692,7 +692,7 @@ const ValidatorDashboard = (props) => {
         console.error("Auto wallet init failed", error);
       }
 
-      socket = new WebSocket("ws://localhost:8080");
+      socket = new WebSocket(`${process.env.REACT_APP_WEBSOCKET_URL}`);
       socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
 
@@ -722,7 +722,7 @@ const ValidatorDashboard = (props) => {
   const verifyNDVI = async () => {
     await runWithLoading("verify-ndvi", async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/calculate-ndvi", {
+        const response = await fetch(`${process.env.REACT_APP_PYTHON_BE_URL}/api/calculate-ndvi`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ bounds: coords }),
@@ -751,7 +751,7 @@ const ValidatorDashboard = (props) => {
   const estimateCO2Sequestration = async () => {
     await runWithLoading("estimate-co2", async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/estimate-co2", {
+        const response = await fetch(`${process.env.REACT_APP_PYTHON_BE_URL}/api/estimate-co2`, {
           method: "POST",
           headers: {
             Accept: "application/json",
