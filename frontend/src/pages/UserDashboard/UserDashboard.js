@@ -335,6 +335,12 @@ const ConsumerDashboard = (props) => {
     });
   };
 
+  useEffect(() => {
+    if (web3 && consumerAddress) {
+      fetchFromAMM();
+    }
+  }, [web3, consumerAddress]);
+
   const fetchFromAMM = async () => {
     if (!web3) {
       showToast("error", "Vui lòng kết nối ví trước.");
@@ -344,19 +350,31 @@ const ConsumerDashboard = (props) => {
     await runWithLoading("fetch-amm", async () => {
       try {
         const networkId = await web3.eth.net.getId();
-        const deployedNetwork = ammABI.networks[networkId];
+        const deployedNetwork = ammABI.networks[networkId.toString()];
+        if (!deployedNetwork) {
+          showToast("error", "AMM Contract không tồn tại trên network này.");
+          return;
+        }
         const contract = new web3.eth.Contract(ammABI.abi, deployedNetwork.address);
 
         const rawListings = await contract.methods.fetchListings().call();
-        const formattedListings = rawListings.map((listing, index) => ({
-          index,
-          seller: listing.seller,
-          amount: web3.utils.fromWei(listing.amount, "ether"),
-          pricePerCCT: web3.utils.fromWei(listing.pricePerCCT, "ether"),
-        }));
+        // Web3 v4 sometimes returns data in different formats (Array of objects or Array of arrays)
+        const formattedListings = rawListings.map((l, index) => {
+          // Defensive access: l.seller or l[0], l.amount or l[1], etc.
+          const seller = l.seller || l[0];
+          const amount = l.amount || l[1];
+          const pricePerCCT = l.pricePerCCT || l[2];
+
+          return {
+            index,
+            seller: seller,
+            amount: web3.utils.fromWei(amount.toString(), "ether"),
+            pricePerCCT: web3.utils.fromWei(pricePerCCT.toString(), "ether"),
+          };
+        });
 
         setListings(formattedListings);
-        showToast("success", "Đã tải danh sách AMM.");
+        showToast("success", `Đã tải ${formattedListings.length} danh sách AMM.`);
       } catch (error) {
         console.error("Error fetching listings:", error);
         showToast("error", "Không tải được AMM listings.");
@@ -585,6 +603,7 @@ const ValidatorDashboard = (props) => {
   const [sequestrationAmount, setSequestrationAmount] = useState("");
   const [coords, setCoords] = useState("");
   const [status, setStatus] = useState("not verified");
+  const [requestId, setRequestId] = useState("");
 
   const { loadingKey, toast, showToast, runWithLoading } = useDashboardFeedback();
 
@@ -613,8 +632,8 @@ const ValidatorDashboard = (props) => {
   };
 
   const approveEvidence = async () => {
-    if (status !== "verified" || credits === "") {
-      showToast("error", "Chưa thể approve CCT. Hãy verify NDVI trước.");
+    if (status !== "verified" || credits === "" || !addressGen || !requestId) {
+      showToast("error", "Chưa thể approve CCT. Hãy nhận request và verify NDVI trước.");
       return;
     }
 
@@ -624,24 +643,47 @@ const ValidatorDashboard = (props) => {
         const deployedNetwork = MultiValidatorABI.networks[networkId];
         const contract = new web3.eth.Contract(MultiValidatorABI.abi, deployedNetwork.address);
 
-        await contract.methods.voteToApprove(addressGen, credits).send({ from: validatorAddress });
+        // KIỂM TRA TRẠNG THÁI HIỆN TẠI TRÊN CONTRACT
+        const req = await contract.methods.mintRequests(addressGen, requestId).call();
+        const hasVoted = await contract.methods.hasVotedMint(requestId, validatorAddress).call();
+
+        if (req.isCompleted) {
+          showToast("error", "Yêu cầu này đã hoàn tất rồi.");
+          return;
+        }
+
+        if (hasVoted) {
+          showToast("error", "Bạn đã phê duyệt (vote) cho yêu cầu này rồi.");
+          return;
+        }
+
+        if (Number(req.approvalCount) !== 0) {
+          const existingCredits = web3.utils.fromWei(req.creditAmount, "ether");
+          if (existingCredits.toString() !== credits.toString()) {
+            showToast("error", `Mismatched credits! Validator trước đã duyệt ${existingCredits} CCT. Bạn cần duyệt khớp con số này.`);
+            return;
+          }
+        }
+
+        await contract.methods.voteToApprove(addressGen, credits, requestId).send({ from: validatorAddress });
 
         setAddressGen("");
         setNDVI("");
         setCoords("");
         setSequestrationAmount("");
+        setCredits("");
         setStatus("not verified");
         showToast("success", "Đã approve CCT cho Generator.");
       } catch (error) {
         console.error("Error approving evidence:", error);
-        showToast("error", "Approve CCT thất bại.");
+        showToast("error", "Approve CCT thất bại hoặc bị từ chối.");
       }
     });
   };
 
   const approveNFT = async () => {
-    if (!amount || !receivedAddress) {
-      showToast("error", "Không có yêu cầu retire nào từ Consumer.");
+    if (!amount || !receivedAddress || !requestId) {
+      showToast("error", "Không có yêu cầu retire hợp lệ từ Consumer.");
       return;
     }
 
@@ -651,7 +693,14 @@ const ValidatorDashboard = (props) => {
         const deployedNetwork = MultiValidatorABI.networks[networkId];
         const burnContract = new web3.eth.Contract(MultiValidatorABI.abi, deployedNetwork.address);
 
-        await burnContract.methods.burnTokens(receivedAddress, amount).send({ from: validatorAddress });
+        // Kiểm tra vote
+        const hasVoted = await burnContract.methods.hasVotedBurn(requestId, validatorAddress).call();
+        if (hasVoted) {
+          showToast("error", "Bạn đã phê duyệt cho yêu cầu retire này rồi.");
+          return;
+        }
+
+        await burnContract.methods.burnTokens(receivedAddress, amount, requestId).send({ from: validatorAddress });
         setAmount("");
         setReceivedAddress("");
         showToast("success", "Phê duyệt retire và mint CRC thành công.");
@@ -679,19 +728,6 @@ const ValidatorDashboard = (props) => {
     let socket;
 
     const initializeWebSocket = async () => {
-      try {
-        const web3Instance = await getWeb3();
-        if (web3Instance) {
-          setWeb3(web3Instance);
-          const accounts = await web3Instance.eth.getAccounts();
-          if (accounts.length > 0) {
-            setValidatorAddress(accounts[0]);
-          }
-        }
-      } catch (error) {
-        console.error("Auto wallet init failed", error);
-      }
-
       socket = new WebSocket(`${process.env.REACT_APP_WEBSOCKET_URL}`);
       socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
@@ -699,12 +735,16 @@ const ValidatorDashboard = (props) => {
         if (data.type === "consumer") {
           setReceivedAddress(data.address);
           setAmount(data.amount);
+          setRequestId(data.requestId);
           showToast("info", "Có yêu cầu retire mới từ Consumer.");
         } else if (data.type === "generator") {
           setAddressGen(data.address);
           setNDVI(data.value);
           setCoords(data.coords);
+          setRequestId(data.requestId);
           setStatus("not verified");
+          setCredits("");
+          setSequestrationAmount("");
           showToast("info", "Có dữ liệu NDVI mới từ Generator.");
         }
       };
@@ -720,6 +760,10 @@ const ValidatorDashboard = (props) => {
   }, [showToast]);
 
   const verifyNDVI = async () => {
+    if (!addressGen) {
+      showToast("error", "Chưa nhận được địa chỉ Generator để verify.");
+      return;
+    }
     await runWithLoading("verify-ndvi", async () => {
       try {
         const response = await fetch(`${process.env.REACT_APP_PYTHON_BE_URL}/api/calculate-ndvi`, {
@@ -802,13 +846,13 @@ const ValidatorDashboard = (props) => {
             <p>Sequestration amount: {sequestrationAmount || 0} tons</p>
 
             <div className="action-row">
-              <ActionButton loadingKey={loadingKey} actionKey="verify-ndvi" className="fun-btn" onClick={verifyNDVI}>Verify NDVI</ActionButton>
-              <ActionButton loadingKey={loadingKey} actionKey="estimate-co2" className="fun-btn" onClick={estimateCO2Sequestration}>Estimate CO2</ActionButton>
+              <ActionButton loadingKey={loadingKey} actionKey="verify-ndvi" className="fun-btn" onClick={verifyNDVI} disabled={!addressGen}>Verify NDVI</ActionButton>
+              <ActionButton loadingKey={loadingKey} actionKey="estimate-co2" className="fun-btn" onClick={estimateCO2Sequestration} disabled={!addressGen}>Estimate CO2</ActionButton>
             </div>
 
             <div className="approve-reject">
-              <ActionButton loadingKey={loadingKey} actionKey="approve-cct" className="fun-btn" onClick={approveEvidence}>Approve CCT</ActionButton>
-              <button className="danger-btn" onClick={rejectEvidence}>Reject</button>
+              <ActionButton loadingKey={loadingKey} actionKey="approve-cct" className="fun-btn" onClick={approveEvidence} disabled={!addressGen || status !== "verified"}>Approve CCT</ActionButton>
+              <button className="danger-btn" onClick={rejectEvidence} disabled={!addressGen}>Reject</button>
             </div>
           </div>
 

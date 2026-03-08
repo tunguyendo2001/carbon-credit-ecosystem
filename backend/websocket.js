@@ -16,19 +16,21 @@ wss.on("connection", (ws) => {
 });
 
 const notifyValidators = (address, value, coords) => {
-    console.log("NDVI request...");
+    const requestId = "0x" + Date.now().toString(16).padStart(64, '0').slice(-64);
+    console.log(`NDVI request [ID: ${requestId}]...`);
     users.forEach((ws) => {
         if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: "generator", address, value, coords }));
+            ws.send(JSON.stringify({ type: "generator", address, value, coords, requestId }));
         }
     });
 };
 
 const sendNftReq = (address, amount) => {
-    console.log("NFT request...");
+    const requestId = "0x" + Date.now().toString(16).padStart(64, '0').slice(-64);
+    console.log(`NFT request [ID: ${requestId}]...`);
     users.forEach((ws) => {
         if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: "consumer", address, amount }));
+            ws.send(JSON.stringify({ type: "consumer", address, amount, requestId }));
         }
     });
 };

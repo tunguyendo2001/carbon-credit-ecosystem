@@ -51,6 +51,7 @@ services:
       - PORT=8000
     volumes:
       - ./backend:/app
+      - ./frontend:/frontend
     depends_on:
       - mongodb
       - ganache

@@ -2,17 +2,14 @@ import "./UserRegistration.css";
 import React, { useState } from "react";
 
 const registerGenerator = async (formData) => {
-    const { firstName, lastName, email, username, password } = formData;
-
+    // Thêm walletAddress
+    const { firstName, lastName, email, username, password, walletAddress } = formData;
     try {
         const response = await fetch(`${process.env.REACT_APP_API_URL}/api/register-generator`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ firstName, lastName, email, username, password }),
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ firstName, lastName, email, username, password, walletAddress }),
         });
-
         return response.ok;
     } catch (error) {
         console.error(error);
@@ -21,17 +18,14 @@ const registerGenerator = async (formData) => {
 };
 
 const registerConsumer = async (formData) => {
-    const { firstName, lastName, email, username, password } = formData;
-
+    // Thêm walletAddress
+    const { firstName, lastName, email, username, password, walletAddress } = formData;
     try {
         const response = await fetch(`${process.env.REACT_APP_API_URL}/api/register-consumer`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ firstName, lastName, email, username, password }),
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ firstName, lastName, email, username, password, walletAddress }),
         });
-
         return response.ok;
     } catch (error) {
         console.error(error);
@@ -40,7 +34,8 @@ const registerConsumer = async (formData) => {
 };
 
 const registerValidator = async (formData) => {
-    const { role, firstName, lastName, email, username, password } = formData;
+    // Thêm walletAddress
+    const { role, firstName, lastName, email, username, password, walletAddress } = formData;
 
     try {
         const response = await fetch(`${process.env.REACT_APP_API_URL}/api/register-validator`, {
@@ -48,7 +43,8 @@ const registerValidator = async (formData) => {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ role, firstName, lastName, email, username, password }),
+            // Gửi thêm walletAddress xuống backend
+            body: JSON.stringify({ role, firstName, lastName, email, username, password, walletAddress }),
         });
 
         return response.ok;
@@ -72,6 +68,7 @@ const UserRegistration = (props) => {
         username: "",
         password: "",
         role: "gps-validator",
+        walletAddress: "", // Thêm trường state này
     });
 
     const handleChange = (e) => {
@@ -81,6 +78,12 @@ const UserRegistration = (props) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Bắt buộc tất cả các Role phải nhập ví
+        if (!formData.walletAddress) {
+            alert("Vui lòng nhập địa chỉ ví Ganache của bạn!");
+            return;
+        }
 
         let isRegistered = false;
         if (userType === "generator") {
@@ -125,6 +128,17 @@ const UserRegistration = (props) => {
                     <input className="form-ip" type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
                     <input className="form-ip" type="text" name="username" placeholder="Username" value={formData.username} onChange={handleChange} required />
                     <input className="form-ip" type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} required />
+                    
+                    <input 
+                        className="form-ip" 
+                        type="text" 
+                        name="walletAddress" 
+                        placeholder="Ganache Wallet Address (0x...)" 
+                        value={formData.walletAddress} 
+                        onChange={handleChange} 
+                        required 
+                    />
+
                     <button type="submit" className="form-submit">Đăng ký</button>
                 </form>
             </div>
